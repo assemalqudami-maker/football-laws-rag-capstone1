@@ -1,8 +1,9 @@
-"""Hybrid retrieval: BGE dense search + BM25 + RRF + cross-encoder rerank."""
+"""Hybrid retrieval: BGE dense search + BM25 + RRF + configurable reranking."""
 
 from __future__ import annotations
 
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
@@ -17,7 +18,8 @@ CHUNKS_PATH = ROOT / "data" / "processed" / "chunks.jsonl"
 VECTOR_DIR = ROOT / "data" / "vectorstore" / "chroma"
 
 EMBED_MODEL = "BAAI/bge-small-en-v1.5"
-RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+LOCAL_RERANK_MODEL = "cross-encoder/ms-marco-MiniLM-L-6-v2"
+COHERE_RERANK_MODEL = os.getenv("COHERE_RERANK_MODEL", "rerank-v4.0-pro")
 COLLECTION = "football_laws"
 QUERY_PREFIX = "Represent this sentence for searching relevant passages: "
 
@@ -27,7 +29,11 @@ def tokenize(text: str) -> list[str]:
 
 
 class HybridRetriever:
-    def __init__(self, use_reranker: bool = True) -> None:
+    def __init__(
+        self,
+        use_reranker: bool = True,
+        reranker_provider: str | None = None,
+    ) -> None:
         self.chunks = [
             json.loads(line)
             for line in CHUNKS_PATH.read_text(encoding="utf-8").splitlines()
@@ -42,7 +48,30 @@ class HybridRetriever:
         self.collection = self.client.get_collection(COLLECTION)
 
         self.use_reranker = use_reranker
-        self.reranker = CrossEncoder(RERANK_MODEL) if use_reranker else None
+        self.reranker_provider = (
+            reranker_provider
+            or os.getenv("RERANK_PROVIDER", "cohere")
+        ).strip().lower()
+
+        self.local_reranker = None
+        self.cohere_client = None
+
+        if self.use_reranker:
+            if self.reranker_provider == "local":
+                self.local_reranker = CrossEncoder(LOCAL_RERANK_MODEL)
+            elif self.reranker_provider == "cohere":
+                api_key = os.getenv("COHERE_API_KEY", "").strip()
+                if not api_key:
+                    raise RuntimeError(
+                        "COHERE_API_KEY is required when RERANK_PROVIDER=cohere."
+                    )
+                import cohere
+
+                self.cohere_client = cohere.ClientV2(api_key=api_key)
+            else:
+                raise ValueError(
+                    "reranker_provider must be 'cohere' or 'local'."
+                )
 
     def dense(self, question: str, k: int = 20) -> list[str]:
         q = QUERY_PREFIX + question.strip()
@@ -68,6 +97,43 @@ class HybridRetriever:
                 )
         return sorted(scores, key=scores.get, reverse=True)
 
+    def _rerank_local(
+        self,
+        question: str,
+        candidates: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        pairs = [(question, c["content"]) for c in candidates]
+        scores = self.local_reranker.predict(pairs)
+        ranked = sorted(
+            zip(candidates, scores),
+            key=lambda item: float(item[1]),
+            reverse=True,
+        )
+        return [dict(c, rerank_score=float(s)) for c, s in ranked]
+
+    def _rerank_cohere(
+        self,
+        question: str,
+        candidates: list[dict[str, Any]],
+    ) -> list[dict[str, Any]]:
+        response = self.cohere_client.rerank(
+            model=COHERE_RERANK_MODEL,
+            query=question,
+            documents=[c["content"] for c in candidates],
+            top_n=len(candidates),
+        )
+
+        ranked = []
+        for item in response.results:
+            candidate = candidates[item.index]
+            ranked.append(
+                dict(
+                    candidate,
+                    rerank_score=float(item.relevance_score),
+                )
+            )
+        return ranked
+
     def retrieve(
         self,
         question: str,
@@ -92,13 +158,9 @@ class HybridRetriever:
         candidates = [self.by_id[cid] for cid in candidate_ids]
 
         if self.use_reranker and candidates:
-            pairs = [(question, c["content"]) for c in candidates]
-            scores = self.reranker.predict(pairs)
-            ranked = sorted(
-                zip(candidates, scores),
-                key=lambda item: float(item[1]),
-                reverse=True,
-            )
-            candidates = [dict(c, rerank_score=float(s)) for c, s in ranked]
+            if self.reranker_provider == "cohere":
+                candidates = self._rerank_cohere(question, candidates)
+            else:
+                candidates = self._rerank_local(question, candidates)
 
         return candidates[:final_k]
