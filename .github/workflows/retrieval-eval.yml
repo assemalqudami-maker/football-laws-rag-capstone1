@@ -25,6 +25,8 @@ jobs:
   evaluate:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      RERANK_PROVIDER: local
 
     steps:
       - name: Checkout
@@ -72,9 +74,9 @@ jobs:
           python scripts/evaluate_recall.py --mode hybrid --no-rerank
           cp data/eval/recall_report.json data/eval/recall_hybrid.json
 
-      - name: Evaluate hybrid retrieval with reranking
+      - name: Evaluate hybrid retrieval with local reranking baseline
         run: |
-          python scripts/evaluate_recall.py --mode hybrid
+          python scripts/evaluate_recall.py --mode hybrid --reranker-provider local
           cp data/eval/recall_report.json data/eval/recall_hybrid_rerank.json
 
       - name: Summarize retrieval performance
@@ -84,7 +86,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: retrieval-evaluation
+          name: retrieval-evaluation-local-baseline
           path: |
             data/eval/chunk_report.json
             data/eval/index_report.json
