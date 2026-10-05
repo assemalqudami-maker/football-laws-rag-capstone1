@@ -1,43 +1,72 @@
 # Cost Analysis
 
 **Pricing snapshot:** 5 October 2026  
-**Generation model:** `gpt-6-luna` (Standard processing, short-context requests)  
-**Dense embeddings and reranking:** local open-source models, so the baseline has no per-query embedding or reranking API charge.
+**Production generation model:** Cohere `command-a-03-2025`  
+**Production reranker:** Cohere `rerank-v4.0-pro`  
+**Dense embeddings:** local `BAAI/bge-small-en-v1.5`
 
-The OpenAI API model/pricing documentation lists GPT-6 Luna Standard text pricing at **$0.10 per 1M input tokens** and **$0.50 per 1M output tokens** as of this snapshot.
+## Pricing basis
 
-Pricing sources:
+Cohere's current Command A documentation lists:
 
-- https://developers.openai.com/api/docs/models/gpt-6-luna
-- https://developers.openai.com/api/docs/pricing
+- **$2.50 / 1M input tokens**
+- **$10.00 / 1M output tokens**
 
-## Assumptions
+Source: https://docs.cohere.com/docs/command-a
+
+Cohere also states that trial API-key calls are free but rate limited, while production keys are billed. Rerank is billed by search, where one search is one query over up to 100 documents before long-document chunking rules apply.
+
+Sources:
+
+- https://cohere.com/pricing
+- https://docs.cohere.com/docs/how-does-cohere-pricing-work
+
+The public pricing page does not expose a simple current pay-as-you-go Rerank v4 search price in the text captured for this report. Therefore the calculator keeps the rerank price as an explicit parameter. The default planning value is **$1 / 1,000 rerank searches**, matching the course RAG Engineering example; it must be replaced with the price shown for the student's production key before commercial use.
+
+## Usage assumptions
 
 - 10 questions per active user per month
-- 3,500 input tokens per question, including retrieved context and instructions
-- 250 output tokens per answer
-- local BGE dense embeddings
-- local BM25
-- local cross-encoder reranking
-- no paid web-search/tool calls in the query path
+- 3,500 billed input tokens per generated answer
+- 250 billed output tokens per answer
+- one Cohere rerank request per user question
+- 20 candidate chunks sent to the reranker
+- local dense query embedding, BM25, RRF, and Chroma
+- no paid web-search/tool calls
 
-Estimated model cost per query:
+### Estimated per-query cost
 
 ```text
-input  = 3,500 / 1,000,000 × $0.10 = $0.000350
-output =   250 / 1,000,000 × $0.50 = $0.000125
-total                                  $0.000475/query
+Command A input:
+3,500 / 1,000,000 × $2.50 = $0.008750
+
+Command A output:
+250 / 1,000,000 × $10.00 = $0.002500
+
+Generation subtotal = $0.011250
+
+Rerank planning assumption:
+$1 / 1,000 searches = $0.001000
+
+Estimated total = $0.012250 per query
 ```
 
-| Monthly active users | Queries/user/month | Queries/month | Estimated generation cost/month |
-|---:|---:|---:|---:|
-| 1,000 | 10 | 10,000 | **$4.75** |
-| 10,000 | 10 | 100,000 | **$47.50** |
-| 100,000 | 10 | 1,000,000 | **$475.00** |
+## Three required scenarios
 
-## What is not included
+| Monthly active users | Queries/user/month | Queries/month | Generation | Rerank* | Estimated total/month |
+|---:|---:|---:|---:|---:|---:|
+| 1,000 | 10 | 10,000 | $112.50 | $10.00 | **$122.50** |
+| 10,000 | 10 | 100,000 | $1,125.00 | $100.00 | **$1,225.00** |
+| 100,000 | 10 | 1,000,000 | $11,250.00 | $1,000.00 | **$12,250.00** |
 
-Hosting/compute is intentionally excluded until the actual Hugging Face Spaces or Railway tier is selected. Network egress, taxes, regional processing premiums, Fast mode, and unusually long prompts are also excluded. The final submission should replace the assumed 3,500/250 token profile with measured production logs if they materially differ.
+* Rerank uses the documented planning assumption above, not an asserted current Rerank v4 production price.
+
+## Student demo cost
+
+For this capstone, a Cohere trial/evaluation key is suitable for development and evaluation because trial calls are free within Cohere's rate and usage limits. It must not be treated as a production/commercial deployment plan.
+
+## RAGAS cost
+
+The required RAGAS run is a one-time 20-question evaluation and is deliberately triggered manually. It uses Cohere Command A as the evaluator LLM and Cohere Embed v4 for embedding-dependent evaluation. It is excluded from the recurring monthly user scenarios because it is an offline evaluation workload, not part of every application query.
 
 ## Reproducibility
 
@@ -47,4 +76,8 @@ Run:
 python scripts/cost_analysis.py
 ```
 
-The calculator exposes the request count, token volumes, and model prices as command-line arguments so the table can be regenerated whenever pricing or measured usage changes.
+If the production Rerank price differs from the planning value:
+
+```bash
+python scripts/cost_analysis.py --rerank-price-per-1k <CURRENT_PRICE>
+```
