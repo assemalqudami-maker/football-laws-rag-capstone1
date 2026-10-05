@@ -21,6 +21,23 @@ from pydantic import BaseModel
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
+# Ragas 0.4.3 still imports the removed legacy module
+# langchain_community.chat_models.vertexai at package import time.
+# This project does not use Vertex AI, so provide a tiny compatibility shim
+# instead of installing Google/Vertex dependencies solely for an unused type
+# check. Remove this once Ragas releases the upstream import fix.
+import types  # noqa: E402
+
+_vertex_module_name = "langchain_community.chat_models.vertexai"
+if _vertex_module_name not in sys.modules:
+    _vertex_module = types.ModuleType(_vertex_module_name)
+
+    class _UnusedChatVertexAI:
+        pass
+
+    _vertex_module.ChatVertexAI = _UnusedChatVertexAI
+    sys.modules[_vertex_module_name] = _vertex_module
+
 from football_rag.generation import FootballLawsRAG  # noqa: E402
 from ragas.embeddings.base import embedding_factory  # noqa: E402
 from ragas.llms.base import InstructorBaseRagasLLM  # noqa: E402
