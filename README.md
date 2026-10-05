@@ -18,7 +18,7 @@ The automated corpus pipeline has successfully collected and extracted **31/31 o
 - 0 exact full-document duplicate groups
 - 0 suspicious documents under 100 words
 
-The source manifest is `data/sources_manifest.csv`. Raw IFAB snapshots and derived text are reproducibly collected but are not committed to this public repository.
+The source manifest is `data/sources_manifest.csv`. Normalized extracted-source hashes are pinned in `data/source_lock.json`, so upstream IFAB content drift is detected instead of silently changing the corpus. Raw IFAB snapshots and derived text are reproducibly collected but are not committed to this public repository.
 
 ## Architecture
 
@@ -70,6 +70,8 @@ The repository contains a fixed **30-question golden retrieval set**. The build 
 The required target is **Recall@5 >= 80%**. The measured best result is **93.3% (28/30)** using hybrid retrieval plus reranking. BM25 scored 90.0%, dense retrieval 86.7%, and hybrid RRF without reranking 86.7%. See `docs/retrieval_evaluation.md`.
 
 A separate **20-question RAGAS** set and runner are included. RAGAS requires an OpenAI API key and must be run only after retrieval has passed the target.
+
+The production Docker build and Streamlit health check also pass in GitHub Actions, so the repository is ready for Railway deployment once deployment secrets are configured.
 
 ## Repository layout
 
@@ -148,12 +150,13 @@ streamlit run app/streamlit_app.py
 - [x] Streamlit UI
 - [x] Simple authentication
 - [x] Docker deployment configuration
+- [x] Production Docker image build + Streamlit health smoke test
 - [x] One-page ADR
 - [x] Cost analysis for 1K / 10K / 100K users
 - [x] Measured Recall@5 >= 80% — **93.3% (28/30)**
 - [ ] Run 20-question RAGAS evaluation
 - [ ] Test with three real users
-- [ ] Deploy and add the public live-demo URL
+- [ ] Deploy to Railway and add the public live-demo URL
 
 ## Safety and scope
 
