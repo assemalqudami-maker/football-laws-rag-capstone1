@@ -3,72 +3,50 @@
 **Project:** Football Laws Referee RAG  
 **Live demo:** https://football-laws-rag-production.up.railway.app
 
-The capstone requires testing the deployed interface with three real users. The three testers selected for the final usability test are Mohammed, Osamah, and Nabeel.
+The capstone usability test includes three users: Mohammed, Osamah, and Nabeel.
 
 ## Test protocol
 
-Each tester should:
-
-1. Sign in to the live application.
-2. Ask at least three football-law questions.
-3. Open at least one retrieved IFAB evidence item.
-4. Rate answer clarity from 1–5.
-5. Rate trust/citation usefulness from 1–5.
-6. Report what worked well and any confusing or incorrect behavior.
+Each tester uses the deployed application, reviews the answers and IFAB evidence, then gives short feedback on clarity, usefulness, usability, and overall experience.
 
 ---
 
 ## Tester 1 — Mohammed
 
-- Date:
-- Tester role/background:
-- Questions tried:
-  1.
-  2.
-  3.
-- What worked:
-- Problems found:
-- Clarity rating (1–5):
-- Trust/citation rating (1–5):
-- Change made after feedback:
+- Answers clear:
+- Answers correct/useful:
+- Checked IFAB source/evidence:
+- What the tester liked:
+- Problem found:
+- Overall rating (1–5):
 
 ---
 
 ## Tester 2 — Osamah
 
-- Date:
-- Tester role/background:
-- Questions tried:
-  1.
-  2.
-  3.
-- What worked:
-- Problems found:
-- Clarity rating (1–5):
-- Trust/citation rating (1–5):
-- Change made after feedback:
+- Answers clear:
+- Answers correct/useful:
+- Checked IFAB source/evidence:
+- What the tester liked:
+- Problem found:
+- Overall rating (1–5):
 
 ---
 
 ## Tester 3 — Nabeel
 
-- Date:
-- Tester role/background:
-- Questions tried:
-  1.
-  2.
-  3.
-- What worked:
-- Problems found:
-- Clarity rating (1–5):
-- Trust/citation rating (1–5):
-- Change made after feedback:
+- Answers clear: **Yes**
+- Answers correct/useful: **Yes**
+- Checked IFAB source/evidence: **Yes**
+- What the tester liked: **The system is very smooth to use.**
+- Problem found: **The UI/UX is not perfect and could be improved.**
+- Overall rating (1–5): **4/5**
 
 ---
 
 ## Final usability summary
 
-Complete this section after the three sessions:
+Complete this section after Mohammed and Osamah provide their feedback:
 
 - Common strengths:
 - Common problems:
