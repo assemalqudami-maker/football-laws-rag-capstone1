@@ -14,9 +14,9 @@ on:
       - "scripts/extract_sources.py"
       - "scripts/audit_corpus.py"
       - "scripts/build_chunks.py"
-      - "scripts/label_gold_chunks.py"
       - "scripts/build_index.py"
       - "data/sources_manifest.csv"
+      - "data/source_lock.json"
       - ".github/workflows/docker-build.yml"
   workflow_dispatch:
 
@@ -38,3 +38,30 @@ jobs:
       - name: Inspect image
         run: |
           docker image inspect football-laws-rag:ci --format='Image size: {{.Size}} bytes'
+
+      - name: Start container
+        run: |
+          docker run -d --name football-laws-rag-ci -p 7860:7860 \
+            -e PORT=7860 \
+            -e APP_USERNAME=ci-user \
+            -e APP_PASSWORD=ci-password \
+            -e OPENAI_API_KEY=ci-placeholder \
+            football-laws-rag:ci
+
+      - name: Smoke-test Streamlit health endpoint
+        run: |
+          for attempt in $(seq 1 45); do
+            if curl --fail --silent http://127.0.0.1:7860/_stcore/health; then
+              echo
+              echo "Streamlit health check passed."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Container did not become healthy."
+          docker logs football-laws-rag-ci
+          exit 1
+
+      - name: Container logs
+        if: always()
+        run: docker logs football-laws-rag-ci || true
