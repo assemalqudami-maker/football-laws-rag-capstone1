@@ -1,0 +1,72 @@
+name: Resume RAGAS only
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ragas-resume.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  ragas-only:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[resume-ragas-only]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+      COHERE_CHAT_MODEL: command-a-03-2025
+      COHERE_RERANK_MODEL: rerank-v4.0-pro
+      COHERE_EMBED_MODEL: embed-v4.0
+      RERANK_PROVIDER: cohere
+      RAGAS_JUDGE_MODEL: command-a-03-2025
+      RAGAS_EMBED_MODEL: embed-v4.0
+      COHERE_RERANK_MIN_INTERVAL_SECONDS: "6.5"
+      COHERE_429_BACKOFF_SECONDS: "65"
+      COHERE_MAX_RETRIES: "4"
+      RAGAS_INTER_QUESTION_DELAY_SECONDS: "18"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify Cohere secret exists
+        run: |
+          if [ -z "$COHERE_API_KEY" ]; then
+            echo "::error::COHERE_API_KEY repository secret is required."
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install CPU PyTorch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project dependencies
+        run: pip install -r requirements.txt
+
+      - name: Rebuild only local RAG prerequisites
+        run: |
+          python scripts/check_sources.py
+          python scripts/collect_sources.py
+          python scripts/extract_sources.py
+          python scripts/audit_corpus.py
+          python scripts/build_chunks.py
+          python scripts/build_index.py
+
+      - name: Resume at failed RAGAS step
+        run: python scripts/run_ragas.py
+
+      - name: Upload RAGAS report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ragas-report-resumed
+          path: data/eval/ragas_report.json
+          retention-days: 30
