@@ -24,7 +24,6 @@ RUN python scripts/check_sources.py \
  && python scripts/extract_sources.py \
  && python scripts/audit_corpus.py \
  && python scripts/build_chunks.py \
- && python scripts/label_gold_chunks.py \
  && python scripts/build_index.py
 
 EXPOSE 7860
