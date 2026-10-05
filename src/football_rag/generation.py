@@ -10,7 +10,7 @@ import cohere
 
 from .retrieval import HybridRetriever
 
-DEFAULT_MODEL = os.getenv("COHERE_CHAT_MODEL", "command-a-plus-05-2026")
+DEFAULT_MODEL = os.getenv("COHERE_CHAT_MODEL", "command-a-03-2025")
 
 
 @dataclass
