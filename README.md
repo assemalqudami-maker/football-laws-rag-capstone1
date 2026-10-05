@@ -70,7 +70,7 @@ The repository contains a fixed **30-question golden retrieval set**. The build 
 
 The required target is **Recall@5 >= 80%**. The credential-free local cross-encoder baseline already reaches **93.3% (28/30)**. The final production reranker is Cohere `rerank-v4.0-pro`; its Recall@5 is measured by the manual Cohere evaluation workflow after `COHERE_API_KEY` is configured. See `docs/retrieval_evaluation.md`.
 
-A separate **20-question RAGAS** set and runner are included. RAGAS uses Cohere Command A as the evaluator LLM and Cohere Embed v4 for embedding-dependent metrics. The same Cohere key also powers the production reranker and answer-generation model.
+A separate **20-question RAGAS** evaluation has been completed using Cohere Command A as the evaluator LLM and Cohere Embed v4 for embedding-dependent metrics. Final scores: **Faithfulness 0.9675**, **Answer Relevancy 0.7635**, **Mean RAGAS 0.8655**. See `docs/ragas_report.md`.
 
 The production Docker build and Streamlit health check also pass in GitHub Actions, so the repository is ready for Railway deployment once deployment secrets are configured.
 
@@ -155,8 +155,8 @@ streamlit run app/streamlit_app.py
 - [x] One-page ADR
 - [x] Cost analysis for 1K / 10K / 100K users
 - [x] Local reranker baseline Recall@5 >= 80% — **93.3% (28/30)**
-- [ ] Measure final Recall@5 with Cohere `rerank-v4.0-pro`
-- [ ] Run 20-question RAGAS evaluation
+- [x] Measure final Recall@5 with Cohere `rerank-v4.0-pro` — **93.3% (28/30)**
+- [x] Run 20-question RAGAS evaluation — **mean 0.8655**
 - [ ] Test with three real users
 - [ ] Deploy to Railway and add the public live-demo URL
 
