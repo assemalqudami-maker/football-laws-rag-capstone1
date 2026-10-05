@@ -1,0 +1,94 @@
+name: Retrieval evaluation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "data/sources_manifest.csv"
+      - "data/eval/golden_questions.json"
+      - "scripts/collect_sources.py"
+      - "scripts/extract_sources.py"
+      - "scripts/audit_corpus.py"
+      - "scripts/build_chunks.py"
+      - "scripts/label_gold_chunks.py"
+      - "scripts/build_index.py"
+      - "scripts/evaluate_recall.py"
+      - "scripts/summarize_retrieval.py"
+      - "src/football_rag/retrieval.py"
+      - ".github/workflows/retrieval-eval.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install retrieval dependencies
+        run: |
+          pip install beautifulsoup4 requests pymupdf tiktoken rank-bm25 \
+            chromadb sentence-transformers numpy
+
+      - name: Collect and validate corpus
+        run: |
+          python scripts/check_sources.py
+          python scripts/collect_sources.py
+          python scripts/extract_sources.py
+          python scripts/audit_corpus.py
+
+      - name: Build chunks and gold labels
+        run: |
+          python scripts/build_chunks.py
+          python scripts/label_gold_chunks.py
+
+      - name: Build dense index
+        run: python scripts/build_index.py
+
+      - name: Evaluate BM25
+        run: |
+          python scripts/evaluate_recall.py --mode bm25 --no-rerank
+          cp data/eval/recall_report.json data/eval/recall_bm25.json
+
+      - name: Evaluate dense retrieval
+        run: |
+          python scripts/evaluate_recall.py --mode dense --no-rerank
+          cp data/eval/recall_report.json data/eval/recall_dense.json
+
+      - name: Evaluate hybrid retrieval
+        run: |
+          python scripts/evaluate_recall.py --mode hybrid --no-rerank
+          cp data/eval/recall_report.json data/eval/recall_hybrid.json
+
+      - name: Evaluate hybrid retrieval with reranking
+        run: |
+          python scripts/evaluate_recall.py --mode hybrid
+          cp data/eval/recall_report.json data/eval/recall_hybrid_rerank.json
+
+      - name: Summarize retrieval performance
+        run: python scripts/summarize_retrieval.py
+
+      - name: Upload retrieval evaluation
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: retrieval-evaluation
+          path: |
+            data/eval/chunk_report.json
+            data/eval/index_report.json
+            data/eval/golden_questions_labeled.json
+            data/eval/recall_*.json
+            data/eval/retrieval_summary.json
+            data/eval/retrieval_summary.md
+          retention-days: 14
