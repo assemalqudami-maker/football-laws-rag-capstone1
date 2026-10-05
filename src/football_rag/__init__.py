@@ -1,0 +1,1 @@
+"""Football Laws RAG package."""
