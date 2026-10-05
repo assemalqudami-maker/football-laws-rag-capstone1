@@ -54,7 +54,16 @@ def main() -> None:
     print(f"Checking embed model: {embed_model}")
     embed = client.embed(
         model=embed_model,
-        texts=["football refereeing laws"],
+        inputs=[
+            {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": "football refereeing laws",
+                    }
+                ]
+            }
+        ],
         input_type="search_query",
         embedding_types=["float"],
     )
