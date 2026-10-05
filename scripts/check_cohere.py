@@ -14,7 +14,7 @@ def main() -> None:
 
     chat_model = os.getenv(
         "COHERE_CHAT_MODEL",
-        "command-a-plus-05-2026",
+        "command-a-03-2025",
     )
     rerank_model = os.getenv(
         "COHERE_RERANK_MODEL",
