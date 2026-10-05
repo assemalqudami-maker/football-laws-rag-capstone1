@@ -2,12 +2,17 @@ name: Cohere RAGAS evaluation
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/ragas-eval.yml"
 
 permissions:
   contents: read
 
 jobs:
   ragas:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-cohere-eval]')
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
