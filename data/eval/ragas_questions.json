@@ -11,8 +11,8 @@
   },
   {
     "id": "R03",
-    "question": "When should the referee apply advantage?",
-    "reference_answer": "When an offence occurs and the non-offending team will benefit, with the offence penalised if the expected advantage does not develop promptly."
+    "question": "When may the referee apply advantage?",
+    "reference_answer": "The referee allows play to continue when an offence occurs, or a restart is incorrectly taken and the ball is in play, if the opposing team will benefit; the referee penalises the offence or orders a retake if the anticipated advantage does not ensue at that time or within a few seconds."
   },
   {
     "id": "R04",
