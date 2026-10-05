@@ -1,9 +1,4 @@
-"""Evaluate retrieval Recall@5 on the 30-question golden set.
-
-Gold evidence is defined by short phrases copied from the official source.
-A question is a hit when at least one returned top-5 chunk from the expected
-source contains one of its gold evidence phrases.
-"""
+"""Evaluate retrieval Recall@5 on the 30-question golden set."""
 
 from __future__ import annotations
 
@@ -17,25 +12,17 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from football_rag.retrieval import HybridRetriever  # noqa: E402
 
-GOLDEN = ROOT / "data" / "eval" / "golden_questions.json"
+GOLDEN = ROOT / "data" / "eval" / "golden_questions_labeled.json"
 OUT = ROOT / "data" / "eval" / "recall_report.json"
-
-
-def norm(text: str) -> str:
-    return " ".join(text.casefold().split())
-
-
-def is_gold(chunk: dict, item: dict) -> bool:
-    expected_sources = set(item["expected_source_ids"])
-    if chunk["source_id"] not in expected_sources:
-        return False
-    content = norm(chunk["content"])
-    return any(norm(p) in content for p in item["gold_phrases"])
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["bm25", "dense", "hybrid"], default="hybrid")
+    parser.add_argument(
+        "--mode",
+        choices=["bm25", "dense", "hybrid"],
+        default="hybrid",
+    )
     parser.add_argument("--no-rerank", action="store_true")
     args = parser.parse_args()
 
@@ -49,25 +36,38 @@ def main() -> None:
     details = []
 
     for item in golden:
+        gold_ids = set(item.get("gold_chunk_ids", []))
+        if not gold_ids:
+            raise SystemExit(
+                f"{item['id']} has no gold_chunk_ids. "
+                "Run scripts/label_gold_chunks.py first."
+            )
+
         results = retriever.retrieve(
             item["question"],
             candidate_k=20,
             final_k=5,
             mode=args.mode,
         )
-        hit = any(is_gold(chunk, item) for chunk in results)
+        returned_ids = [chunk["chunk_id"] for chunk in results]
+        matched = sorted(gold_ids.intersection(returned_ids))
+        hit = bool(matched)
         hits += int(hit)
+
         details.append(
             {
                 "id": item["id"],
                 "question": item["question"],
                 "hit": hit,
+                "matched_gold_chunk_ids": matched,
+                "gold_chunk_ids": sorted(gold_ids),
                 "returned": [
                     {
                         "chunk_id": c["chunk_id"],
                         "source_id": c["source_id"],
                         "section": c.get("section"),
                         "page": c.get("page"),
+                        "rerank_score": c.get("rerank_score"),
                     }
                     for c in results
                 ],
