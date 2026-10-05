@@ -1,0 +1,102 @@
+[
+  {
+    "id": "R01",
+    "question": "Is being in an offside position itself an offence?",
+    "reference_answer": "No. A player is only penalised for offside when the conditions for an offside offence are met."
+  },
+  {
+    "id": "R02",
+    "question": "From which three restarts can a player receive the ball directly without an offside offence?",
+    "reference_answer": "A goal kick, a throw-in, and a corner kick."
+  },
+  {
+    "id": "R03",
+    "question": "When should the referee apply advantage?",
+    "reference_answer": "When an offence occurs and the non-offending team will benefit, with the offence penalised if the expected advantage does not develop promptly."
+  },
+  {
+    "id": "R04",
+    "question": "How many players must a team have for a match to start or continue?",
+    "reference_answer": "A team must have at least seven players, subject to the specific temporary exceptions in Law 3."
+  },
+  {
+    "id": "R05",
+    "question": "How long is each half of a standard match?",
+    "reference_answer": "Each half is 45 minutes unless a permitted reduction was agreed before the match in accordance with competition rules."
+  },
+  {
+    "id": "R06",
+    "question": "What is the maximum normal half-time interval?",
+    "reference_answer": "15 minutes."
+  },
+  {
+    "id": "R07",
+    "question": "What does Law 12 say about every contact between the ball and a player's hand or arm?",
+    "reference_answer": "Not every hand or arm contact with the ball is a handball offence."
+  },
+  {
+    "id": "R08",
+    "question": "When can hand or arm position create a handball offence by making the body unnaturally bigger?",
+    "reference_answer": "When the hand or arm position is not a consequence of, or justifiable by, the player's body movement for the specific situation."
+  },
+  {
+    "id": "R09",
+    "question": "What is the sanction for deliberate handball that denies a goal or obvious goal-scoring opportunity?",
+    "reference_answer": "The player is sent off, except for the goalkeeper within their own penalty area."
+  },
+  {
+    "id": "R10",
+    "question": "What makes a tackle serious foul play?",
+    "reference_answer": "A tackle or challenge that endangers an opponent's safety or uses excessive force or brutality."
+  },
+  {
+    "id": "R11",
+    "question": "What distance must opponents normally respect at a free kick?",
+    "reference_answer": "9.15 metres (10 yards), subject to the specific restart provisions."
+  },
+  {
+    "id": "R12",
+    "question": "How far must attackers stay from a wall of three or more defenders at a free kick?",
+    "reference_answer": "At least 1 metre until the ball is in play."
+  },
+  {
+    "id": "R13",
+    "question": "Can a goal be scored directly from a throw-in?",
+    "reference_answer": "No."
+  },
+  {
+    "id": "R14",
+    "question": "What happens if an opponent remains in the penalty area at a goal kick because there was not enough time to leave?",
+    "reference_answer": "The referee allows play to continue, subject to the conditions in Law 16."
+  },
+  {
+    "id": "R15",
+    "question": "Who has the final decision when other match officials assist?",
+    "reference_answer": "The referee."
+  },
+  {
+    "id": "R16",
+    "question": "What are the four main VAR review categories?",
+    "reference_answer": "Goal/no goal, penalty/no penalty, direct red card, and mistaken identity."
+  },
+  {
+    "id": "R17",
+    "question": "What is the required goal width between the inside of the posts?",
+    "reference_answer": "7.32 metres (8 yards)."
+  },
+  {
+    "id": "R18",
+    "question": "What circumference must the ball have?",
+    "reference_answer": "Between 68 and 70 centimetres."
+  },
+  {
+    "id": "R19",
+    "question": "What offside duty do assistant referees have?",
+    "reference_answer": "They indicate when a player in an offside position may be penalised."
+  },
+  {
+    "id": "R20",
+    "question": "Where must the goalkeeper have part of one foot when a penalty kick is taken?",
+    "reference_answer": "Touching, in line with, or behind the goal line until the ball is kicked."
+  }
+]
