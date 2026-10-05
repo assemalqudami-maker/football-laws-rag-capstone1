@@ -38,6 +38,7 @@ jobs:
 
       - name: Install retrieval dependencies
         run: |
+          pip install torch --index-url https://download.pytorch.org/whl/cpu
           pip install beautifulsoup4 requests pymupdf tiktoken rank-bm25 \
             chromadb sentence-transformers numpy
 
