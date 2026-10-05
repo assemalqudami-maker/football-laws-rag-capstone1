@@ -11,3 +11,4 @@ sentence-transformers>=3.0
 tiktoken>=0.8
 openai>=1.50
 streamlit>=1.39
+ragas>=0.4
