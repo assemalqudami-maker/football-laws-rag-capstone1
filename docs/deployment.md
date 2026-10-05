@@ -1,50 +1,68 @@
-# Deployment Guide
+# Railway Deployment Guide
 
-The application is containerized and can be deployed to a Docker-capable Hugging Face Space or Railway service.
+Railway is the selected public deployment target for this project. The repository contains a production Dockerfile, so Railway can build directly from GitHub without a separate build service.
 
-## Required secrets
+## Required Railway variables
 
-Never commit secrets to Git. Configure these in the deployment platform:
+Configure these as Railway service variables. Never commit real values to Git.
 
-- `OPENAI_API_KEY` — required for answer generation and RAGAS.
+- `OPENAI_API_KEY` — required for answer generation.
 - `OPENAI_MODEL` — optional; defaults to `gpt-6-luna`.
-- `APP_USERNAME` — demo login username.
-- `APP_PASSWORD` — demo login password.
+- `APP_USERNAME` — username for the simple demo login.
+- `APP_PASSWORD` — password for the simple demo login.
 
-## What the image build does
+Railway provides `PORT`; do not define it manually. The Docker start command reads Railway's `PORT` value and binds Streamlit to `0.0.0.0`.
 
-The Docker build:
+## Repository source
 
-1. installs Python dependencies;
-2. validates the official IFAB source manifest;
-3. downloads the official source snapshots;
-4. extracts and audits the corpus;
-5. creates structure-aware chunks;
-6. creates local BGE embeddings and a persistent Chroma index.
+Use this public GitHub repository:
 
-This makes the deployment reproducible without committing the downloaded IFAB text or local vector database to the public repository.
+`https://github.com/assemalqudami-maker/football-laws-rag-capstone1`
 
-## Hugging Face Spaces
+Railway automatically uses the root `Dockerfile` when it detects it in the connected repository.
 
-Create a new Space and select **Docker** as the SDK. Connect or push this GitHub repository to the Space, then define the required secrets in the Space settings. The container exposes port 7860 and starts Streamlit automatically.
+## What the Docker build does
 
-After deployment, verify:
+The production image:
 
-- the login screen appears;
-- authentication rejects an incorrect password;
-- at least five representative questions return answers;
-- each answer exposes official IFAB evidence and source links;
-- an unsupported question causes the system to abstain rather than invent a rule.
+1. installs CPU-only PyTorch and the lean runtime dependency set;
+2. pre-caches the BGE embedding model and cross-encoder reranker;
+3. validates the official IFAB manifest;
+4. downloads the 31 official IFAB sources;
+5. extracts and audits the corpus;
+6. verifies normalized source hashes against `data/source_lock.json`;
+7. creates the structure-aware chunks;
+8. builds the local Chroma vector index;
+9. starts the Streamlit application.
 
-## Railway
+Raw IFAB source text and the generated vector store are created inside the deployment image and are not republished in the Git repository.
 
-Create a service from the GitHub repository. Railway should detect the Dockerfile. Add the required environment variables and deploy. The Docker command respects the platform `PORT` variable.
+## Railway deployment steps
+
+1. Create a Railway project.
+2. Add a service from the GitHub repository above.
+3. Add the required service variables.
+4. Deploy.
+5. After the deployment becomes healthy, open **Settings → Networking** and generate a public domain.
+6. Test the domain from a browser session that is not signed into Railway.
+7. Add the final public URL to `README.md` and `docs/submission_checklist.md`.
+
+## RAGAS credentials
+
+RAGAS is intentionally not executed during Railway deployment because it would consume the student's API budget on every rebuild.
+
+For the required 20-question RAGAS report, add `OPENAI_API_KEY` as a GitHub Actions repository secret and manually run the **RAGAS evaluation** workflow once after retrieval is final.
 
 ## Deployment acceptance checklist
 
-- Public URL opens from a browser not signed into the developer account.
-- Authentication works.
-- Five golden questions return grounded answers.
-- Source links open the official IFAB pages.
-- No API key appears in logs, source code, or client-side HTML.
-- The final live URL is added to `README.md`.
+- [ ] Docker build succeeds.
+- [ ] Railway service reaches a running/healthy state.
+- [ ] Public domain opens without a Railway account.
+- [ ] Correct credentials allow login.
+- [ ] Incorrect credentials are rejected.
+- [ ] Five representative football-law questions return answers.
+- [ ] Retrieved evidence is visible.
+- [ ] Official IFAB source links open correctly.
+- [ ] One unsupported/out-of-scope question triggers an evidence-insufficient response rather than fabrication.
+- [ ] No secret appears in repository files, deployment logs, or client-side output.
+- [ ] Public URL is recorded in the README.
