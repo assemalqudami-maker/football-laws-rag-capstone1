@@ -40,10 +40,12 @@
 - [x] BM25
 - [x] Dense retrieval
 - [x] Hybrid RRF
-- [x] Cross-encoder reranking
+- [x] Local cross-encoder reranking baseline
+- [x] Cohere `rerank-v4.0-pro` production integration
 - [x] 30 golden questions
 - [x] Recall@5 measured
-- [x] **Recall@5 = 93.3% (28/30)** with hybrid + reranking
+- [x] **Local baseline Recall@5 = 93.3% (28/30)**
+- [ ] Record final Cohere Rerank Recall@5
 
 ### Stage 4 — Interface
 
@@ -59,7 +61,7 @@
 - [x] One-page ADR
 - [x] Cost-analysis model and report
 - [x] 20-question RAGAS set and runner
-- [ ] Run RAGAS with the student's API credentials
+- [ ] Add `COHERE_API_KEY` secret and run Cohere Recall@5 + RAGAS
 - [ ] Deploy to Railway
 - [ ] Generate public Railway domain
 - [ ] Complete three real-user tests
