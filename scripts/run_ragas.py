@@ -6,9 +6,11 @@ import asyncio
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 from cohere import Cohere
+from cohere.errors import TooManyRequestsError
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -20,6 +22,49 @@ from ragas.metrics.collections import AnswerRelevancy, Faithfulness  # noqa: E40
 
 DATASET = ROOT / "data" / "eval" / "ragas_questions.json"
 OUT = ROOT / "data" / "eval" / "ragas_report.json"
+
+
+def is_rate_limit_error(exc: Exception) -> bool:
+    return (
+        isinstance(exc, TooManyRequestsError)
+        or "429" in str(exc)
+        or "too many requests" in str(exc).lower()
+        or "rate limit" in str(exc).lower()
+    )
+
+
+async def retry_async(label: str, call):
+    backoff = float(os.getenv("COHERE_429_BACKOFF_SECONDS", "65"))
+    max_retries = int(os.getenv("COHERE_MAX_RETRIES", "4"))
+
+    for attempt in range(1, max_retries + 2):
+        try:
+            return await call()
+        except Exception as exc:
+            if not is_rate_limit_error(exc) or attempt > max_retries:
+                raise
+            print(
+                f"[Cohere] {label} rate-limited; sleeping "
+                f"{backoff:.0f}s before retry {attempt}/{max_retries}."
+            )
+            await asyncio.sleep(backoff)
+
+
+def retry_sync(label: str, call):
+    backoff = float(os.getenv("COHERE_429_BACKOFF_SECONDS", "65"))
+    max_retries = int(os.getenv("COHERE_MAX_RETRIES", "4"))
+
+    for attempt in range(1, max_retries + 2):
+        try:
+            return call()
+        except Exception as exc:
+            if not is_rate_limit_error(exc) or attempt > max_retries:
+                raise
+            print(
+                f"[Cohere] {label} rate-limited; sleeping "
+                f"{backoff:.0f}s before retry {attempt}/{max_retries}."
+            )
+            time.sleep(backoff)
 
 
 async def main() -> None:
@@ -57,18 +102,30 @@ async def main() -> None:
 
     rag = FootballLawsRAG()
     rows = []
+    inter_question_delay = float(
+        os.getenv("RAGAS_INTER_QUESTION_DELAY_SECONDS", "18")
+    )
 
-    for item in questions:
-        rag_result = rag.answer(item["question"])
-
-        faith = await faithfulness.ascore(
-            user_input=item["question"],
-            response=rag_result.answer,
-            retrieved_contexts=rag_result.contexts,
+    for index, item in enumerate(questions, start=1):
+        rag_result = retry_sync(
+            f"{item['id']} generation",
+            lambda: rag.answer(item["question"]),
         )
-        rel = await relevancy.ascore(
-            user_input=item["question"],
-            response=rag_result.answer,
+
+        faith = await retry_async(
+            f"{item['id']} faithfulness",
+            lambda: faithfulness.ascore(
+                user_input=item["question"],
+                response=rag_result.answer,
+                retrieved_contexts=rag_result.contexts,
+            ),
+        )
+        rel = await retry_async(
+            f"{item['id']} answer relevancy",
+            lambda: relevancy.ascore(
+                user_input=item["question"],
+                response=rag_result.answer,
+            ),
         )
 
         row = {
@@ -85,6 +142,13 @@ async def main() -> None:
             f"{item['id']}: faithfulness={row['faithfulness']:.3f} "
             f"relevancy={row['answer_relevancy']:.3f}"
         )
+
+        if index < len(questions) and inter_question_delay > 0:
+            print(
+                f"[Cohere] Trial-key pacing: sleeping "
+                f"{inter_question_delay:.1f}s before next RAGAS question."
+            )
+            await asyncio.sleep(inter_question_delay)
 
     avg_faith = sum(r["faithfulness"] for r in rows) / len(rows)
     avg_rel = sum(r["answer_relevancy"] for r in rows) / len(rows)
