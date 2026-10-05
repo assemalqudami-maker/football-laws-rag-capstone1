@@ -72,12 +72,13 @@
   },
   {
     "id": "Q08",
-    "question": "When should the referee allow advantage after an offence?",
+    "question": "When should the referee allow advantage after an offence or an incorrectly taken restart?",
     "expected_source_ids": [
       "IFAB-LAW-05-2026-27"
     ],
     "gold_phrases": [
-      "the non-offending team will benefit from the advantage"
+      "the opposing team will benefit from the advantage",
+      "restart is incorrectly taken and the ball is in play"
     ]
   },
   {
