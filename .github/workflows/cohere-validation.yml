@@ -1,0 +1,44 @@
+name: Cohere credential validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cohere-validation.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[validate-cohere]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+      COHERE_CHAT_MODEL: command-a-03-2025
+      COHERE_RERANK_MODEL: rerank-v4.0-pro
+      COHERE_EMBED_MODEL: embed-v4.0
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify secret exists
+        run: |
+          if [ -z "$COHERE_API_KEY" ]; then
+            echo "::error::COHERE_API_KEY repository secret is missing."
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install Cohere SDK
+        run: pip install "cohere>=5.0"
+
+      - name: Validate Cohere Chat Rerank and Embed
+        run: python scripts/check_cohere.py
