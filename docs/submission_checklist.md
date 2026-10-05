@@ -53,7 +53,7 @@
 - [x] Simple authentication
 - [x] English interface
 - [x] Evidence and official source links
-- [ ] Test with three real users
+- [x] Test with three real users
 
 ### Stage 5 — Deploy and submit
 
@@ -64,5 +64,5 @@
 - [x] Cohere Recall@5 + 20-question RAGAS completed
 - [x] Deploy to Railway
 - [x] Generate public Railway domain — https://football-laws-rag-production.up.railway.app
-- [ ] Complete three real-user tests
+- [x] Complete three real-user tests
 - [x] Add live URL and final RAGAS score to README
