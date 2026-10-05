@@ -3,42 +3,43 @@
 **Evaluation date:** 5 October 2026  
 **Golden set:** 30 fixed football-law questions  
 **Metric:** Recall@5  
-**Required target:** >= 80%  
-**Best result:** **93.3% (28/30)**
+**Required target:** >= 80%
 
-## Results
+## Credential-free baseline
+
+The automatic GitHub Actions workflow uses a local cross-encoder so retrieval quality can be checked on every code change without consuming API quota.
 
 | Retrieval configuration | Hits | Recall@5 | Target |
 |---|---:|---:|:---:|
 | BM25 | 27/30 | **90.0%** | Pass |
 | Dense retrieval | 26/30 | **86.7%** | Pass |
 | Hybrid dense + BM25 (RRF) | 26/30 | **86.7%** | Pass |
-| Hybrid + cross-encoder reranking | 28/30 | **93.3%** | **Pass** |
+| Hybrid + local cross-encoder reranking | 28/30 | **93.3%** | Pass |
 
-## Selected production retriever
+This 93.3% result proves that the hybrid candidate set contains enough relevant evidence and that reranking materially improves the final Top 5.
 
-The production pipeline uses:
+## Production reranker
 
-1. dense search with `BAAI/bge-small-en-v1.5`;
-2. BM25 lexical search;
-3. Reciprocal Rank Fusion (RRF);
-4. cross-encoder reranking with `cross-encoder/ms-marco-MiniLM-L-6-v2`;
-5. final Top-5 evidence chunks.
+The production system now uses Cohere **`rerank-v4.0-pro`**. Cohere is intentionally evaluated in a manual workflow because every rerank request consumes API quota.
 
-Although BM25 alone performed strongly, the required architecture includes hybrid retrieval and reranking. The reranked hybrid configuration also produced the best measured result, improving Recall@5 from 86.7% before reranking to 93.3%.
+After the repository secret `COHERE_API_KEY` is configured, the **Cohere RAGAS evaluation** workflow performs:
+
+1. a low-cost Cohere chat/rerank/embed access test;
+2. the same 30-question Recall@5 evaluation using Cohere Rerank v4.0 Pro;
+3. the required 20-question RAGAS evaluation.
+
+The Cohere Recall@5 result must be recorded here after that credentialed run; it is not fabricated from the local baseline.
 
 ## Evaluation protocol
 
 - The golden set is stored in `data/eval/golden_questions.json`.
-- Each question has manually authored evidence anchors tied to expected official IFAB source IDs.
-- After chunking, `scripts/label_gold_chunks.py` resolves those anchors into concrete chunk IDs.
-- Retrieval is then measured against those fixed chunk IDs.
-- The same gold labels are used for BM25, dense, hybrid, and reranked evaluation.
-- The target is not changed to fit a retrieval configuration.
+- Evidence anchors are tied to expected official IFAB source IDs.
+- `scripts/label_gold_chunks.py` resolves those anchors to concrete chunk IDs after chunking.
+- All retrieval variants use the same 30 questions and gold chunk IDs.
+- Candidate retrieval uses Top 20; reranking returns the final Top 5.
+- The required target remains Recall@5 >= 80%.
 
-The corpus build produced **1,031 chunks** for this run.
-
-## Reproduce
+## Reproduce the free local baseline
 
 ```bash
 python scripts/check_sources.py
@@ -52,7 +53,14 @@ python scripts/build_index.py
 python scripts/evaluate_recall.py --mode bm25 --no-rerank
 python scripts/evaluate_recall.py --mode dense --no-rerank
 python scripts/evaluate_recall.py --mode hybrid --no-rerank
-python scripts/evaluate_recall.py --mode hybrid
+python scripts/evaluate_recall.py --mode hybrid --reranker-provider local
 ```
 
-The automated GitHub Actions retrieval workflow completed successfully and uploaded the detailed JSON reports as a workflow artifact.
+## Reproduce the Cohere production evaluation
+
+After setting `COHERE_API_KEY`:
+
+```bash
+python scripts/check_cohere.py
+python scripts/evaluate_recall.py --mode hybrid --reranker-provider cohere
+```
