@@ -2,7 +2,9 @@
 
 ## Status
 
-The corpus, chunking baseline, dense index, hybrid retrieval, and reranking pipeline are implemented and measured. The selected hybrid + reranking configuration achieves **Recall@5 = 93.3% (28/30)** on the fixed golden set, exceeding the 80% capstone target. Generation, RAGAS evaluation, and public deployment remain dependent on configured deployment/API credentials.
+The corpus, chunking pipeline, dense index, hybrid retrieval, reranking, and Streamlit interface are implemented. The selected retrieval configuration achieves **Recall@5 = 93.3% (28/30)** on the fixed 30-question golden set, exceeding the required 80% target.
+
+Remaining release steps are credential-dependent: run the 20-question RAGAS evaluation, deploy the Docker image publicly on Railway, and complete three real-user tests.
 
 ## High-level pipeline
 
@@ -13,213 +15,228 @@ Official IFAB sources
 Source validation + snapshot collection
         |
         v
-HTML/PDF text extraction
+HTML/PDF extraction
         |
         v
-Cleaning + metadata preservation
+Normalization + metadata preservation
         |
         v
 Structure-aware chunking
         |
-        +--------------------+
-        |                    |
-        v                    v
-Dense embeddings          BM25 index
-        |                    |
-        +---------+----------+
-                  v
-          Hybrid retrieval
-             (RRF fusion)
-                  |
-                  v
-              Reranker
-                  |
-                  v
-           Top evidence
-                  |
-                  v
-          Grounded LLM answer
-           with citations
+        +----------------------+
+        |                      |
+        v                      v
+BGE dense retrieval         BM25
+        |                      |
+        +----------+-----------+
+                   v
+             RRF fusion
+                   |
+                   v
+        Cross-encoder reranker
+                   |
+                   v
+             Top-5 evidence
+                   |
+                   v
+       Grounded OpenAI response
+          with source citations
 ```
 
-## 1. Source collection
+## 1. Domain and source strategy
 
-**Choice:** official IFAB sources only for the initial corpus.
+**Decision:** use official IFAB material only for the initial corpus.
 
-**Why:** the domain is rules-based and authoritative wording matters. Mixing blogs, forums, or commentary into the core index would increase ambiguity and make source provenance harder to defend.
+**Why:** football refereeing is rules-based and authoritative wording matters. Mixing blogs, forums, social posts, or commentary into the core index would increase ambiguity and weaken source provenance.
 
-The source manifest is version-controlled. Raw downloaded snapshots are local artifacts and are not committed by default.
+The target edition is **2026/27**. The corpus contains **31 English IFAB source records** and passed automated collection and audit checks.
+
+The repository stores:
+
+- a version-controlled source manifest;
+- a normalized source-content lock in `data/source_lock.json`;
+- reproducible collection/extraction code.
+
+Raw IFAB snapshots are not committed to Git. The lock file allows the build to detect upstream content drift before silently changing the indexed corpus.
 
 ## 2. Extraction
 
-- HTML: BeautifulSoup
-- PDF: PyMuPDF first, with pypdf as a fallback for diagnostics
+**HTML:** BeautifulSoup  
+**PDF:** PyMuPDF
 
-Every extracted record should preserve:
+Each extracted record preserves:
 
-- source_id
-- title
-- URL
-- season/version
-- source type
-- section heading
-- law number where applicable
-- page number for PDFs
-- original text
+- source ID;
+- title;
+- official URL;
+- language;
+- season/version;
+- format;
+- section heading;
+- PDF page number when applicable;
+- original extracted text.
 
 ## 3. Chunking
 
-### Initial candidate
+**Decision:** structure-aware section/page chunking with a maximum token window and overlap for long sections.
 
-Structure-aware recursive chunking with section boundaries and overlap.
+Configuration:
 
-Starting configuration for evaluation:
+- tokenizer: `cl100k_base`;
+- maximum window: about **600 tokens**;
+- overlap for split long sections: **90 tokens**;
+- preserve headings and PDF page boundaries.
 
-- target size: 450–650 tokens
-- overlap: 70–100 tokens
-- never split a short rule bullet away from its heading when avoidable
+Measured corpus output:
 
-### Why this strategy
+- **1,031 chunks**
+- minimum: 14 tokens
+- median: **103 tokens**
+- 90th percentile: **190 tokens**
+- maximum: 609 tokens
 
-Football laws are highly structured. A fixed-size splitter can separate a condition from its exception or sanction. Structure-aware chunks should preserve the relation between headings, bullets, exceptions, and restart/sanction rules.
+### Why the median is much smaller than 600
 
-### Alternatives to compare
+IFAB rules contain many short headings, bullets, conditions, exceptions, and sanctions. The pipeline intentionally keeps these short semantic units intact rather than merging unrelated provisions merely to reach a target size. The 600-token value is therefore a ceiling/window for long sections, not a forced fixed chunk size.
 
-- fixed-token chunking
-- recursive chunking
-- parent-child chunking
-
-The final choice will be based on Recall@5 using the same golden set.
+This preserves legal/rule structure and still produced the best measured retrieval result when combined with reranking.
 
 ## 4. Embeddings
 
-### Candidate models
+**Decision:** `BAAI/bge-small-en-v1.5`.
 
-1. `text-embedding-3-small`
-2. a multilingual/local sentence-transformer baseline if deployment cost requires it
+Reasons:
 
-### Decision rule
+- the application and corpus are English-only;
+- the model is compact enough for CPU deployment;
+- embeddings can be generated locally;
+- it avoids recurring embedding API cost;
+- it achieved strong measured retrieval performance on this corpus.
 
-Choose the model that gives the best retrieval quality for the cost and deployment constraints. Do not select a model only because it is popular.
+Query embeddings use the recommended retrieval query prefix and normalized vectors.
 
 ## 5. Vector database
 
-### Initial candidate: Chroma
+**Decision:** Chroma with cosine distance.
 
-Why it is a reasonable first choice:
+Reasons:
 
-- small corpus
-- local development is simple
-- persistence is easy
-- no separate managed service is required
-- suitable for a capstone prototype
+- the corpus is small;
+- local persistence is simple;
+- metadata is preserved with each chunk;
+- no separate managed vector service is required;
+- it deploys inside the same container as the application.
 
-### Alternatives
-
-- Qdrant
-- pgvector
-
-If deployment persistence or filtering requirements make Chroma awkward, the project will move to Qdrant or pgvector and document the measured reason.
+Alternatives considered included Qdrant and pgvector. They would add operational complexity without a demonstrated benefit for this corpus size.
 
 ## 6. Hybrid retrieval
 
-The target retriever combines:
+The production retriever combines:
 
-- dense vector search
-- BM25 lexical search
-- Reciprocal Rank Fusion (RRF)
+- dense vector search;
+- BM25 lexical search;
+- Reciprocal Rank Fusion (RRF).
 
-Why hybrid search is required here:
+Why hybrid retrieval fits this domain:
 
-- law questions often contain exact terms such as "DOGSO", "deliberate play", "handball", or "penalty mark";
-- dense retrieval captures semantic paraphrases;
-- BM25 protects exact legal terminology and rare phrases.
+- exact rule terms such as DOGSO, VAR, offside, handball, and measurements benefit from lexical matching;
+- semantic paraphrases benefit from dense retrieval;
+- RRF combines the two rankings without requiring their raw scores to share a scale.
 
 ## 7. Reranking
 
-Retrieve a wider candidate set (for example 20), then rerank to a final top 5.
+**Decision:** `cross-encoder/ms-marco-MiniLM-L-6-v2`.
 
-Candidate rerankers:
+The retriever first collects a broader candidate set, then reranks it and returns the final Top 5 evidence chunks.
 
-- Cohere Rerank
-- BGE reranker running locally
+Measured Recall@5:
 
-Selection will be based on Recall@5, latency, and cost.
+- BM25: **90.0%**
+- Dense: **86.7%**
+- Hybrid RRF: **86.7%**
+- Hybrid + reranking: **93.3%**
+
+The reranked hybrid pipeline is therefore selected for production.
 
 ## 8. Generation
 
-The generation prompt will require:
+**Decision:** OpenAI Responses API, with the model configurable through `OPENAI_MODEL` and a baseline of `gpt-6-luna`.
 
-- answer only from retrieved evidence;
-- cite sources;
-- distinguish the law text from explanatory wording;
-- abstain when evidence is insufficient.
+The generation prompt requires the model to:
 
-Temperature should remain low for rule interpretation.
+- answer only from retrieved IFAB evidence;
+- use bracket citations linked to the retrieved source list;
+- preserve precise rule meaning;
+- state when the supplied evidence is insufficient;
+- avoid presenting the application as an official match authority.
+
+The baseline uses `reasoning.effort = none` because the task is focused evidence-grounded QA and this reduces latency and token use.
 
 ## 9. Evaluation
 
 ### Retrieval
 
-- 30 golden questions
-- manually labelled supporting chunks
-- Recall@5 target: >= 80%
+- fixed 30-question golden set;
+- evidence anchors tied to official IFAB source IDs;
+- anchors resolved to concrete chunk IDs after chunking;
+- Recall@5 target: >= 80%;
+- measured best result: **93.3% (28/30)**.
+
+See `docs/retrieval_evaluation.md`.
 
 ### Generation
 
-- 20-question RAGAS evaluation set
-- report at least faithfulness, answer relevance, and context relevance/precision where supported by the installed RAGAS version
+A separate 20-question RAGAS evaluation set is prepared. The workflow measures:
+
+- Faithfulness;
+- Answer Relevancy.
+
+The RAGAS workflow is manual to avoid accidental API-budget consumption.
 
 ## 10. Interface
 
-**Planned:** Streamlit.
+**Decision:** Streamlit.
 
-Reasons:
+Implemented features:
 
-- fast to implement;
-- simple Python integration;
-- easy deployment to Hugging Face Spaces or another supported host;
-- sufficient for a professional portfolio demo.
-
-The UI will be English-only and include:
-
-- login gate
-- question box
-- answer
-- expandable citations/evidence
-- source title and URL
-- response latency
+- English-only interface;
+- simple username/password authentication from environment variables;
+- question input;
+- example questions;
+- grounded answer;
+- expandable retrieved evidence;
+- official source links;
+- response latency;
+- short recent-question history.
 
 ## 11. Deployment
 
-Target: Hugging Face Spaces first, with Railway as fallback.
+**Decision:** Railway using the repository Dockerfile.
 
-Final deployment choice will be based on:
+Why Railway:
 
-- persistence requirements
-- secrets handling
-- memory limits
-- cold-start time
-- model footprint
-- current pricing/free-tier availability
+- direct GitHub repository deployment;
+- Dockerfile support;
+- environment-variable secrets;
+- public generated domains;
+- automatic redeployment on repository updates.
+
+The image:
+
+1. installs CPU-only PyTorch and runtime dependencies;
+2. caches the embedding and reranking models;
+3. validates and downloads the locked IFAB corpus;
+4. extracts and audits source text;
+5. builds chunks and the Chroma index;
+6. starts Streamlit on Railway's `PORT`.
 
 ## 12. Reproducibility and cost control
 
-- never re-embed unchanged files;
-- hash source snapshots;
-- cache embeddings;
-- separate ingestion from query execution;
-- test evaluation on small samples before full RAGAS runs;
-- log model, parameters, corpus version, and date for every evaluation run.
-
-
-## Measured retrieval result
-
-On the fixed 30-question golden set:
-
-- BM25: 90.0% Recall@5
-- Dense: 86.7% Recall@5
-- Hybrid RRF: 86.7% Recall@5
-- Hybrid + reranking: **93.3% Recall@5**
-
-The production retriever therefore keeps the required hybrid design and reranking stage. See `docs/retrieval_evaluation.md` for the reproducible comparison.
+- corpus source IDs and URLs are version-controlled;
+- normalized source hashes are locked;
+- upstream source drift causes the audit to fail;
+- raw source text is not republished in Git;
+- local embeddings and reranking avoid per-query retrieval API charges;
+- RAGAS runs only through a manual workflow;
+- the cost model is reproducible in `scripts/cost_analysis.py`;
+- model and evaluation choices are documented rather than claimed without measurement.
