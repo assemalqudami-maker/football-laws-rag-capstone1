@@ -36,11 +36,11 @@ Section-aware chunking (~600 tokens, 90-token overlap)
 └─────────┬─────────┴─────────┬────────┘
           └────── RRF fusion ─┘
                     ↓
-           Cross-encoder reranker
+           Cohere Rerank v4.0 Pro
                     ↓
                Top-5 evidence
                     ↓
-        Grounded OpenAI Responses API
+        Grounded Cohere Command A
                     ↓
        Answer + official IFAB citations
 ```
@@ -51,8 +51,9 @@ Current retrieval components:
 - Vector store: Chroma
 - Lexical retrieval: BM25
 - Fusion: RRF
-- Reranker: `cross-encoder/ms-marco-MiniLM-L-6-v2`
-- Generator default: `gpt-6-luna`
+- Production reranker: `rerank-v4.0-pro` via Cohere API
+- Free CI baseline reranker: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- Generator: `command-a-03-2025` via Cohere API
 - Interface: Streamlit
 - Authentication: username/password from environment secrets
 
@@ -67,9 +68,9 @@ The repository contains a fixed **30-question golden retrieval set**. The build 
 3. hybrid dense + BM25 using RRF
 4. hybrid + reranking
 
-The required target is **Recall@5 >= 80%**. The measured best result is **93.3% (28/30)** using hybrid retrieval plus reranking. BM25 scored 90.0%, dense retrieval 86.7%, and hybrid RRF without reranking 86.7%. See `docs/retrieval_evaluation.md`.
+The required target is **Recall@5 >= 80%**. The credential-free local cross-encoder baseline already reaches **93.3% (28/30)**. The final production reranker is Cohere `rerank-v4.0-pro`; its Recall@5 is measured by the manual Cohere evaluation workflow after `COHERE_API_KEY` is configured. See `docs/retrieval_evaluation.md`.
 
-A separate **20-question RAGAS** set and runner are included. RAGAS requires an OpenAI API key and must be run only after retrieval has passed the target.
+A separate **20-question RAGAS** set and runner are included. RAGAS uses Cohere Command A as the evaluator LLM and Cohere Embed v4 for embedding-dependent metrics. The same Cohere key also powers the production reranker and answer-generation model.
 
 The production Docker build and Streamlit health check also pass in GitHub Actions, so the repository is ready for Railway deployment once deployment secrets are configured.
 
@@ -126,7 +127,7 @@ python scripts/audit_corpus.py
 python scripts/build_chunks.py
 python scripts/label_gold_chunks.py
 python scripts/build_index.py
-python scripts/evaluate_recall.py --mode hybrid
+python scripts/evaluate_recall.py --mode hybrid --reranker-provider local
 ```
 
 Create a local `.env` from `.env.example`, but never commit your real API key.
@@ -153,7 +154,8 @@ streamlit run app/streamlit_app.py
 - [x] Production Docker image build + Streamlit health smoke test
 - [x] One-page ADR
 - [x] Cost analysis for 1K / 10K / 100K users
-- [x] Measured Recall@5 >= 80% — **93.3% (28/30)**
+- [x] Local reranker baseline Recall@5 >= 80% — **93.3% (28/30)**
+- [ ] Measure final Recall@5 with Cohere `rerank-v4.0-pro`
 - [ ] Run 20-question RAGAS evaluation
 - [ ] Test with three real users
 - [ ] Deploy to Railway and add the public live-demo URL
