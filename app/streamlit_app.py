@@ -67,8 +67,8 @@ with st.sidebar:
         "Answers are grounded in the official IFAB corpus indexed for this project. "
         "This is an educational tool, not an official match ruling."
     )
-    st.markdown("**Retrieval:** Dense + BM25 + RRF + reranking")
-    st.markdown("**Language:** English")
+    st.markdown("**Retrieval:** Dense + BM25 + RRF + Cohere Rerank v4.0 Pro")
+    st.markdown("**Generator:** Cohere Command A")\n    st.markdown("**Language:** English")
     if st.button("Sign out"):
         st.session_state.authenticated = False
         st.rerun()
