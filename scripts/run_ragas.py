@@ -33,7 +33,7 @@ async def main() -> None:
 
     judge_model = os.getenv(
         "RAGAS_JUDGE_MODEL",
-        "command-a-plus-05-2026",
+        "command-a-03-2025",
     )
     embed_model = os.getenv("RAGAS_EMBED_MODEL", "embed-v4.0")
 
@@ -97,7 +97,7 @@ async def main() -> None:
         "embedding_model": embed_model,
         "generation_model": os.getenv(
             "COHERE_CHAT_MODEL",
-            "command-a-plus-05-2026",
+            "command-a-03-2025",
         ),
         "rerank_model": os.getenv(
             "COHERE_RERANK_MODEL",
