@@ -1,0 +1,162 @@
+{
+  "season": "2026/27",
+  "locked_on": "2026-10-05",
+  "normalization": "NFKC + casefold + whitespace collapse",
+  "documents": {
+    "IFAB-LAW-01-2026-27": {
+      "sha256_normalized_text": "f84c70606ddbf904518ccfa5beb3fcafdc1ae8c20d6cfecbb0738183f3f6ad26",
+      "characters": 11306,
+      "words": 1991
+    },
+    "IFAB-LAW-02-2026-27": {
+      "sha256_normalized_text": "0c7a047833ca6877613c13becd7b06ae278c24cad3e82629204d633cb813efda",
+      "characters": 2232,
+      "words": 380
+    },
+    "IFAB-LAW-03-2026-27": {
+      "sha256_normalized_text": "55ed480bf75ab77ec910b1e7c140e891858426eca6f60d2c363e32185defaa45",
+      "characters": 24932,
+      "words": 4288
+    },
+    "IFAB-LAW-04-2026-27": {
+      "sha256_normalized_text": "c07656627bb33b08e9aec96622bec7a5fa593d29131d30cdd87b5cb67a3e1d1d",
+      "characters": 11105,
+      "words": 1795
+    },
+    "IFAB-LAW-05-2026-27": {
+      "sha256_normalized_text": "3b2aef2e5b39f6a3f1aca0a7f841709039bbae89fe0f056538a521b5fed54c34",
+      "characters": 34381,
+      "words": 5966
+    },
+    "IFAB-LAW-06-2026-27": {
+      "sha256_normalized_text": "a087a1c639521c43f31f96fa825b41a1624203af184c7bc91f923db54b5b15e8",
+      "characters": 6095,
+      "words": 1004
+    },
+    "IFAB-LAW-07-2026-27": {
+      "sha256_normalized_text": "d053220ab1ce3067a2625baa0929012a518dffb9ae9ecc4a7a566a6a1da2e6ae",
+      "characters": 2884,
+      "words": 489
+    },
+    "IFAB-LAW-08-2026-27": {
+      "sha256_normalized_text": "c9cb24e99de07557dc7e1aa7c430a5eb515dffaa5a5d42d435df388087e97934",
+      "characters": 14023,
+      "words": 2576
+    },
+    "IFAB-LAW-09-2026-27": {
+      "sha256_normalized_text": "b293e54fd6fdc83e44fc5166ae229a3e3abda4bfaace93e34a5a23de1527ccf1",
+      "characters": 6286,
+      "words": 1151
+    },
+    "IFAB-LAW-10-2026-27": {
+      "sha256_normalized_text": "9387d427309600fc6167b9a7d5a7693a2599e194c38200c3a6a4cab181196af4",
+      "characters": 12088,
+      "words": 2128
+    },
+    "IFAB-LAW-11-2026-27": {
+      "sha256_normalized_text": "6f6b4f5e25d1ff4527a42b6f49646b49d5459467c81ece8e44cc4067f2731fa7",
+      "characters": 22506,
+      "words": 3926
+    },
+    "IFAB-LAW-12-2026-27": {
+      "sha256_normalized_text": "58cf188b65c3d87e3065e247aa63d11efaf81d96fc40899a77c996abaedf2d69",
+      "characters": 98483,
+      "words": 16722
+    },
+    "IFAB-LAW-13-2026-27": {
+      "sha256_normalized_text": "e800e01904bfaa6e910fa3c93bab52ed80cad852cd06a2c2c5149b12b8de57c9",
+      "characters": 12221,
+      "words": 2193
+    },
+    "IFAB-LAW-14-2026-27": {
+      "sha256_normalized_text": "e110bab44e74c85cc13b38f7ffc5b60572519053ce95f4cd4daabcd176e3530b",
+      "characters": 24975,
+      "words": 4308
+    },
+    "IFAB-LAW-15-2026-27": {
+      "sha256_normalized_text": "bb23f9fe3082d0f9b5868b6d30e4dfdc5f7f366aeed47864589faffae916d647",
+      "characters": 9559,
+      "words": 1722
+    },
+    "IFAB-LAW-16-2026-27": {
+      "sha256_normalized_text": "00a370b7bb6d8531a36edcdd6d313b24106c420a8a2e91acaa9b0e2d4d55e6b6",
+      "characters": 6231,
+      "words": 1131
+    },
+    "IFAB-LAW-17-2026-27": {
+      "sha256_normalized_text": "d1835e254d2335d321b049dd4e40a5c93f43b69b5ca96666f35f28eab35864e7",
+      "characters": 4155,
+      "words": 753
+    },
+    "IFAB-VAR-2026-27": {
+      "sha256_normalized_text": "5aadc433feba2c7ad60472010ea685aaa8a6358be701215b725116b464a461a5",
+      "characters": 18069,
+      "words": 2984
+    },
+    "IFAB-TIME-SUB-2026-27": {
+      "sha256_normalized_text": "6b7cf5c35fe126681ae4746228af069102e2df24b91c987a6e48f5586d97b8b7",
+      "characters": 3131,
+      "words": 530
+    },
+    "IFAB-OFFFIELD-TREATMENT-2026-27": {
+      "sha256_normalized_text": "a9d76df8ba5712a17ddc89fba1870eba664dd970134e5f22a329fb87d1ee6a46",
+      "characters": 4228,
+      "words": 745
+    },
+    "IFAB-THROW-GOALKICK-2026-27": {
+      "sha256_normalized_text": "300b63e5dacfe458b64e6b5c44b76b2c43f34ffe1814798312e408905183d409",
+      "characters": 2286,
+      "words": 406
+    },
+    "IFAB-CAPTAIN-GUIDELINES": {
+      "sha256_normalized_text": "76ab21cff4979b6f1e7b47d4502dda4fa5c8b95a867b998e29aa5c842349d8e0",
+      "characters": 5221,
+      "words": 852
+    },
+    "IFAB-TEMP-DISMISSALS": {
+      "sha256_normalized_text": "20e2c23e0d40a2b643e123a7d398be052a3284c6e5f0a7ec5a1193ea52a1904b",
+      "characters": 5922,
+      "words": 940
+    },
+    "IFAB-RETURN-SUBS": {
+      "sha256_normalized_text": "18b51c8eeb3315c8769f245ed21f6d0115c8861c09e507821ef059186253bf18",
+      "characters": 1046,
+      "words": 169
+    },
+    "IFAB-CONCUSSION-SUBS": {
+      "sha256_normalized_text": "2042e7c9cc0a84a90283b4b1ceedf130449a14d1483e2b5753d4603be63e7138",
+      "characters": 4694,
+      "words": 723
+    },
+    "IFAB-GUIDE-INTRO": {
+      "sha256_normalized_text": "652fbcf3e7f76cc64882e809824b2e7b5398b6799dda49ab2d83c04f8e3e98d5",
+      "characters": 1378,
+      "words": 234
+    },
+    "IFAB-GUIDE-POSITIONING": {
+      "sha256_normalized_text": "3d3acf4e34f6a62ef78d521dea8700d3aa920053c30000195ffb53d007e7e117",
+      "characters": 6953,
+      "words": 1248
+    },
+    "IFAB-GUIDE-COMMS": {
+      "sha256_normalized_text": "eebd3162d65d2e88dc89a5d3b11d7dd463ab8aa0cc647de1ce9f48cb58888025",
+      "characters": 9107,
+      "words": 1644
+    },
+    "IFAB-GUIDE-ADVICE": {
+      "sha256_normalized_text": "af93b330c5b6e4507965b84bbcffe0342f74819ea1fa4f6305cc374b6c6ed248",
+      "characters": 6628,
+      "words": 1161
+    },
+    "IFAB-CHANGES-2026-27": {
+      "sha256_normalized_text": "12b7f6fa88e02febbd04e3822c3e18c6381bab857209540c02b807ec7218bf4e",
+      "characters": 35025,
+      "words": 5836
+    },
+    "IFAB-CIRCULAR-32-2026": {
+      "sha256_normalized_text": "7f416cadff3b41e1d5f02fb0ab61c8a664397fc5c5258d56c2e80f8cb459269a",
+      "characters": 7388,
+      "words": 1196
+    }
+  }
+}
