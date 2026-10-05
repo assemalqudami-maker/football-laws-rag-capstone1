@@ -1,5 +1,7 @@
 name: Resume RAGAS only
 
+# Resume trigger: Ragas legacy VertexAI import fixed
+
 on:
   workflow_dispatch:
   push:
