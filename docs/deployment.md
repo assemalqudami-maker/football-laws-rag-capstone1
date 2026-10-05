@@ -68,3 +68,15 @@ For the required 20-question RAGAS report, add `COHERE_API_KEY` as a GitHub Acti
 - [ ] One unsupported/out-of-scope question triggers an evidence-insufficient response rather than fabrication.
 - [ ] No secret appears in repository files, deployment logs, or client-side output.
 - [ ] Public URL is recorded in the README.
+
+
+## Production deployment
+
+**Status:** Live  
+**Public URL:** https://football-laws-rag-production.up.railway.app  
+**Platform:** Railway  
+**Service:** `football-laws-rag`
+
+The deployed service successfully rebuilt the locked 31-source corpus, created 1,031 chunks, rebuilt the 384-dimensional Chroma index, and started Streamlit. Railway reports the production service as online with one running replica and no current warnings or critical issues. The Streamlit health endpoint has returned HTTP 200 through the public Railway domain.
+
+The public domain is routed to Railway's runtime `PORT` (currently 8080); the application itself continues to read the port dynamically from the environment.
