@@ -12,7 +12,7 @@
 | 1. Public GitHub repository link | Complete | https://github.com/assemalqudami-maker/football-laws-rag-capstone1 |
 | 2. Live demo URL | Pending deployment | Add Railway public domain after deployment |
 | 3. ADR — one page | Complete | `docs/ADR.md` |
-| 4. RAGAS score on 20 questions | Pending credentialed run | `data/eval/ragas_questions.json` + `scripts/run_ragas.py` |
+| 4. RAGAS score on 20 questions | Complete | Mean **0.8655** — `docs/ragas_report.md` |
 | 5. Cost analysis — 1K / 10K / 100K users | Complete | `docs/cost_analysis.md` |
 
 ## Stage requirements
@@ -45,7 +45,7 @@
 - [x] 30 golden questions
 - [x] Recall@5 measured
 - [x] **Local baseline Recall@5 = 93.3% (28/30)**
-- [ ] Record final Cohere Rerank Recall@5
+- [x] Final Cohere Rerank Recall@5 — **93.3% (28/30)**
 
 ### Stage 4 — Interface
 
@@ -61,7 +61,7 @@
 - [x] One-page ADR
 - [x] Cost-analysis model and report
 - [x] 20-question RAGAS set and runner
-- [ ] Add `COHERE_API_KEY` secret and run Cohere Recall@5 + RAGAS
+- [x] Cohere Recall@5 + 20-question RAGAS completed
 - [ ] Deploy to Railway
 - [ ] Generate public Railway domain
 - [ ] Complete three real-user tests
