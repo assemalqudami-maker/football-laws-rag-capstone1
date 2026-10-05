@@ -6,8 +6,10 @@ Railway is the selected public deployment target for this project. The repositor
 
 Configure these as Railway service variables. Never commit real values to Git.
 
-- `OPENAI_API_KEY` — required for answer generation.
-- `OPENAI_MODEL` — optional; defaults to `gpt-6-luna`.
+- `COHERE_API_KEY` — required for production reranking and answer generation.
+- `COHERE_CHAT_MODEL` — optional; defaults to `command-a-03-2025`.
+- `COHERE_RERANK_MODEL` — optional; defaults to `rerank-v4.0-pro`.
+- `RERANK_PROVIDER` — set to `cohere`.
 - `APP_USERNAME` — username for the simple demo login.
 - `APP_PASSWORD` — password for the simple demo login.
 
@@ -26,7 +28,7 @@ Railway automatically uses the root `Dockerfile` when it detects it in the conne
 The production image:
 
 1. installs CPU-only PyTorch and the lean runtime dependency set;
-2. pre-caches the BGE embedding model and cross-encoder reranker;
+2. pre-caches the local BGE embedding model;
 3. validates the official IFAB manifest;
 4. downloads the 31 official IFAB sources;
 5. extracts and audits the corpus;
@@ -51,7 +53,7 @@ Raw IFAB source text and the generated vector store are created inside the deplo
 
 RAGAS is intentionally not executed during Railway deployment because it would consume the student's API budget on every rebuild.
 
-For the required 20-question RAGAS report, add `OPENAI_API_KEY` as a GitHub Actions repository secret and manually run the **RAGAS evaluation** workflow once after retrieval is final.
+For the required 20-question RAGAS report, add `COHERE_API_KEY` as a GitHub Actions repository secret and manually run the **Cohere RAGAS evaluation** workflow once. The workflow first validates Cohere Chat, Rerank, and Embed access, then measures Cohere Recall@5 and runs RAGAS.
 
 ## Deployment acceptance checklist
 
