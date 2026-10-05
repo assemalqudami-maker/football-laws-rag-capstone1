@@ -1,0 +1,11 @@
+.git
+.github
+.venv
+__pycache__
+*.pyc
+.env
+data/raw
+data/processed
+data/vectorstore
+data/eval/*.json
+data/eval/*.md
