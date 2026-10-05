@@ -3,7 +3,8 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     HF_HOME=/app/.cache/huggingface \
-    TRANSFORMERS_CACHE=/app/.cache/huggingface
+    TRANSFORMERS_CACHE=/app/.cache/huggingface \
+    RERANK_PROVIDER=cohere
 
 WORKDIR /app
 
@@ -13,12 +14,11 @@ RUN pip install --no-cache-dir -r requirements-deploy.txt
 
 COPY . .
 
-# Pre-cache both local retrieval models during the image build so production
-# startup does not depend on downloading model files.
+# Pre-cache the local BGE dense embedding model. Reranking and answer
+# generation use Cohere at query time, so no local reranker is bundled.
 RUN python scripts/cache_models.py
 
-# Rebuild the official IFAB corpus and vector index from the version-controlled
-# source manifest. Raw source text is not stored in the public Git repository.
+# Rebuild the pinned official IFAB corpus and local vector index.
 RUN python scripts/check_sources.py \
  && python scripts/collect_sources.py \
  && python scripts/extract_sources.py \
