@@ -1,4 +1,4 @@
-"""Grounded answer generation for Football Laws RAG."""
+"""Grounded answer generation for Football Laws RAG using Cohere."""
 
 from __future__ import annotations
 
@@ -6,11 +6,11 @@ import os
 from dataclasses import dataclass
 from typing import Any
 
-from openai import OpenAI
+import cohere
 
 from .retrieval import HybridRetriever
 
-DEFAULT_MODEL = os.getenv("OPENAI_MODEL", "gpt-6-luna")
+DEFAULT_MODEL = os.getenv("COHERE_CHAT_MODEL", "command-a-plus-05-2026")
 
 
 @dataclass
@@ -22,9 +22,18 @@ class RAGAnswer:
 
 class FootballLawsRAG:
     def __init__(self, model: str = DEFAULT_MODEL) -> None:
+        api_key = os.getenv("COHERE_API_KEY", "").strip()
+        if not api_key:
+            raise RuntimeError(
+                "COHERE_API_KEY is required for Cohere generation."
+            )
+
         self.model = model
-        self.retriever = HybridRetriever(use_reranker=True)
-        self.client = OpenAI()
+        self.retriever = HybridRetriever(
+            use_reranker=True,
+            reranker_provider="cohere",
+        )
+        self.client = cohere.ClientV2(api_key=api_key)
 
     def answer(self, question: str) -> RAGAnswer:
         question = question.strip()
@@ -38,45 +47,53 @@ class FootballLawsRAG:
             mode="hybrid",
         )
 
-        context_parts = []
+        documents = []
         for i, item in enumerate(sources, start=1):
             location = item.get("section") or ""
             if item.get("page") not in (None, -1):
                 location = f"{location} | page {item['page']}".strip(" |")
-            context_parts.append(
-                f"[{i}] {item['title']} | {location}\n"
-                f"Source: {item['url']}\n"
-                f"{item['content']}"
+
+            documents.append(
+                {
+                    "data": {
+                        "evidence_id": str(i),
+                        "title": item["title"],
+                        "location": location,
+                        "url": item["url"],
+                        "text": item["content"],
+                    }
+                }
             )
 
-        context = "\n\n---\n\n".join(context_parts)
-
-        instructions = (
+        system_message = (
             "You are an educational assistant for association-football refereeing. "
-            "Answer ONLY from the supplied IFAB evidence. "
+            "Answer only from the supplied official IFAB documents. "
             "Do not use outside knowledge. If the evidence is insufficient or "
             "ambiguous, explicitly say that the provided sources do not establish "
-            "the answer. Keep legal/rule wording precise. Cite supporting evidence "
-            "using bracket numbers such as [1] or [2]. Do not invent citations. "
+            "the answer. Keep rule wording precise and concise. "
             "Do not present the answer as an official ruling for a real match."
         )
 
-        user_input = (
-            f"QUESTION:\n{question}\n\n"
-            f"RETRIEVED IFAB EVIDENCE:\n{context}\n\n"
-            "Give a concise answer followed by any important conditions or exceptions."
+        response = self.client.chat(
+            model=self.model,
+            messages=[
+                {"role": "system", "content": system_message},
+                {
+                    "role": "user",
+                    "content": (
+                        question
+                        + "\n\nGive a concise answer and mention important "
+                        "conditions or exceptions."
+                    ),
+                },
+            ],
+            documents=documents,
         )
 
-        response = self.client.responses.create(
-            model=self.model,
-            instructions=instructions,
-            input=user_input,
-            reasoning={"effort": "none"},
-            max_output_tokens=500,
-        )
+        answer = response.message.content[0].text.strip()
 
         return RAGAnswer(
-            answer=response.output_text.strip(),
+            answer=answer,
             sources=sources,
             contexts=[s["content"] for s in sources],
         )
