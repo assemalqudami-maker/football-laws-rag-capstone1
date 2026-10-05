@@ -67,7 +67,7 @@ The repository contains a fixed **30-question golden retrieval set**. The build 
 3. hybrid dense + BM25 using RRF
 4. hybrid + reranking
 
-The required target is **Recall@5 >= 80%**. Results are written as CI artifacts; a score is not claimed until the run completes.
+The required target is **Recall@5 >= 80%**. The measured best result is **93.3% (28/30)** using hybrid retrieval plus reranking. BM25 scored 90.0%, dense retrieval 86.7%, and hybrid RRF without reranking 86.7%. See `docs/retrieval_evaluation.md`.
 
 A separate **20-question RAGAS** set and runner are included. RAGAS requires an OpenAI API key and must be run only after retrieval has passed the target.
 
@@ -150,7 +150,7 @@ streamlit run app/streamlit_app.py
 - [x] Docker deployment configuration
 - [x] One-page ADR
 - [x] Cost analysis for 1K / 10K / 100K users
-- [ ] Confirm measured Recall@5 >= 80%
+- [x] Measured Recall@5 >= 80% — **93.3% (28/30)**
 - [ ] Run 20-question RAGAS evaluation
 - [ ] Test with three real users
 - [ ] Deploy and add the public live-demo URL
