@@ -23,6 +23,10 @@ jobs:
       RERANK_PROVIDER: cohere
       RAGAS_JUDGE_MODEL: command-a-03-2025
       RAGAS_EMBED_MODEL: embed-v4.0
+      COHERE_RERANK_MIN_INTERVAL_SECONDS: "6.5"
+      COHERE_429_BACKOFF_SECONDS: "65"
+      COHERE_MAX_RETRIES: "4"
+      RAGAS_INTER_QUESTION_DELAY_SECONDS: "18"
 
     steps:
       - name: Checkout
@@ -64,6 +68,11 @@ jobs:
         run: |
           python scripts/evaluate_recall.py --mode hybrid --reranker-provider cohere
           cp data/eval/recall_report.json data/eval/recall_cohere_rerank.json
+
+      - name: Cool down Cohere trial-key window
+        run: |
+          echo "Waiting 65 seconds so the 10/min Rerank trial window fully resets."
+          sleep 65
 
       - name: Run required 20-question RAGAS evaluation with Cohere
         run: python scripts/run_ragas.py
