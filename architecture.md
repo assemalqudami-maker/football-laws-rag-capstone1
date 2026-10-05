@@ -33,13 +33,13 @@ BGE dense retrieval         BM25
              RRF fusion
                    |
                    v
-        Cross-encoder reranker
+        Cohere Rerank v4.0 Pro
                    |
                    v
              Top-5 evidence
                    |
                    v
-       Grounded OpenAI response
+       Grounded Cohere Command A response
           with source citations
 ```
 
@@ -145,9 +145,9 @@ Why hybrid retrieval fits this domain:
 
 ## 7. Reranking
 
-**Decision:** `cross-encoder/ms-marco-MiniLM-L-6-v2`.
+**Decision:** Cohere `rerank-v4.0-pro` for production. A local `cross-encoder/ms-marco-MiniLM-L-6-v2` remains only as a credential-free CI baseline.
 
-The retriever first collects a broader candidate set, then reranks it and returns the final Top 5 evidence chunks.
+The retriever first collects a broader candidate set, then sends up to 20 candidates to Cohere Rerank and returns the final Top 5 evidence chunks.
 
 Measured Recall@5:
 
@@ -156,11 +156,11 @@ Measured Recall@5:
 - Hybrid RRF: **86.7%**
 - Hybrid + reranking: **93.3%**
 
-The reranked hybrid pipeline is therefore selected for production.
+The 93.3% result is the local baseline. The production Cohere reranker uses the same candidate set and golden labels; its final Recall@5 is measured in the manual Cohere evaluation workflow after the API key is configured.
 
 ## 8. Generation
 
-**Decision:** OpenAI Responses API, with the model configurable through `OPENAI_MODEL` and a baseline of `gpt-6-luna`.
+**Decision:** Cohere Chat API with `command-a-03-2025`, configurable through `COHERE_CHAT_MODEL`.
 
 The generation prompt requires the model to:
 
@@ -170,7 +170,7 @@ The generation prompt requires the model to:
 - state when the supplied evidence is insufficient;
 - avoid presenting the application as an official match authority.
 
-The baseline uses `reasoning.effort = none` because the task is focused evidence-grounded QA and this reduces latency and token use.
+Cohere receives the retrieved IFAB evidence through its document-grounding interface. The same provider is used for final answer generation and the RAGAS evaluator to keep the credential and model stack consistent.
 
 ## 9. Evaluation
 
@@ -186,7 +186,7 @@ See `docs/retrieval_evaluation.md`.
 
 ### Generation
 
-A separate 20-question RAGAS evaluation set is prepared. The workflow measures:
+A separate 20-question RAGAS evaluation set is prepared. It uses Cohere Command A as the evaluator LLM and Cohere Embed v4 for embedding-dependent metrics. The workflow measures:
 
 - Faithfulness;
 - Answer Relevancy.
@@ -224,7 +224,7 @@ Why Railway:
 The image:
 
 1. installs CPU-only PyTorch and runtime dependencies;
-2. caches the embedding and reranking models;
+2. caches the local BGE dense embedding model;
 3. validates and downloads the locked IFAB corpus;
 4. extracts and audits source text;
 5. builds chunks and the Chroma index;
@@ -236,7 +236,7 @@ The image:
 - normalized source hashes are locked;
 - upstream source drift causes the audit to fail;
 - raw source text is not republished in Git;
-- local embeddings and reranking avoid per-query retrieval API charges;
+- dense embeddings remain local while production reranking and generation use the Cohere API;
 - RAGAS runs only through a manual workflow;
 - the cost model is reproducible in `scripts/cost_analysis.py`;
 - model and evaluation choices are documented rather than claimed without measurement.
