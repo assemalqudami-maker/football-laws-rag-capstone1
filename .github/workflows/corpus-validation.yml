@@ -3,6 +3,13 @@ name: Corpus validation
 on:
   push:
     branches: [main]
+    paths:
+      - "data/sources_manifest.csv"
+      - "scripts/check_sources.py"
+      - "scripts/collect_sources.py"
+      - "scripts/extract_sources.py"
+      - "scripts/audit_corpus.py"
+      - ".github/workflows/corpus-validation.yml"
   workflow_dispatch:
 
 permissions:
@@ -11,7 +18,7 @@ permissions:
 jobs:
   validate-corpus:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -21,10 +28,9 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
 
-      - name: Install dependencies
-        run: pip install -r requirements.txt
+      - name: Install ingestion dependencies
+        run: pip install beautifulsoup4 requests pymupdf
 
       - name: Validate source manifest
         run: python scripts/check_sources.py
