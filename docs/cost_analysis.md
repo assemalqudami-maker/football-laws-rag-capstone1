@@ -1,35 +1,50 @@
 # Cost Analysis
 
 **Pricing snapshot:** 5 October 2026  
-**Generation model used for the baseline:** `gpt-6-luna` (Standard, short-context tier)  
-**Dense embeddings and reranking:** local open-source models, so there is no per-query embedding or reranking API charge.
+**Generation model:** `gpt-6-luna` (Standard processing, short-context requests)  
+**Dense embeddings and reranking:** local open-source models, so the baseline has no per-query embedding or reranking API charge.
 
-The current OpenAI API pricing page lists GPT-6 Luna Standard short-context pricing at **$0.05 per 1M input tokens** and **$0.25 per 1M output tokens**.
+The OpenAI API model/pricing documentation lists GPT-6 Luna Standard text pricing at **$0.10 per 1M input tokens** and **$0.50 per 1M output tokens** as of this snapshot.
 
-Pricing source: https://developers.openai.com/api/docs/pricing
+Pricing sources:
+
+- https://developers.openai.com/api/docs/models/gpt-6-luna
+- https://developers.openai.com/api/docs/pricing
 
 ## Assumptions
 
 - 10 questions per active user per month
-- 3,500 input tokens per question
+- 3,500 input tokens per question, including retrieved context and instructions
 - 250 output tokens per answer
-- local BGE embeddings
+- local BGE dense embeddings
 - local BM25
 - local cross-encoder reranking
-- no web search or other paid tools in the query path
+- no paid web-search/tool calls in the query path
 
 Estimated model cost per query:
 
 ```text
-input  = 3,500 / 1,000,000 × $0.05 = $0.0001750
-output =   250 / 1,000,000 × $0.25 = $0.0000625
-total                                  $0.0002375/query
+input  = 3,500 / 1,000,000 × $0.10 = $0.000350
+output =   250 / 1,000,000 × $0.50 = $0.000125
+total                                  $0.000475/query
 ```
 
 | Monthly active users | Queries/user/month | Queries/month | Estimated generation cost/month |
 |---:|---:|---:|---:|
-| 1,000 | 10 | 10,000 | **$2.38** |
-| 10,000 | 10 | 100,000 | **$23.75** |
-| 100,000 | 10 | 1,000,000 | **$237.50** |
+| 1,000 | 10 | 10,000 | **$4.75** |
+| 10,000 | 10 | 100,000 | **$47.50** |
+| 100,000 | 10 | 1,000,000 | **$475.00** |
 
-Hosting is excluded until the actual Hugging Face Spaces or Railway tier is selected. Recalculate this table with `python scripts/cost_analysis.py` whenever model pricing or measured token usage changes.
+## What is not included
+
+Hosting/compute is intentionally excluded until the actual Hugging Face Spaces or Railway tier is selected. Network egress, taxes, regional processing premiums, Fast mode, and unusually long prompts are also excluded. The final submission should replace the assumed 3,500/250 token profile with measured production logs if they materially differ.
+
+## Reproducibility
+
+Run:
+
+```bash
+python scripts/cost_analysis.py
+```
+
+The calculator exposes the request count, token volumes, and model prices as command-line arguments so the table can be regenerated whenever pricing or measured usage changes.
