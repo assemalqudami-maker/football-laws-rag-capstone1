@@ -1,0 +1,37 @@
+[
+  {
+    "id": "Q01",
+    "question": "When is a player in an offside position?",
+    "expected_source_ids": ["IFAB-LAW-11-2026-27"],
+    "gold_chunk_ids": [],
+    "answer_notes": ""
+  },
+  {
+    "id": "Q02",
+    "question": "Is being in an offside position itself an offence?",
+    "expected_source_ids": ["IFAB-LAW-11-2026-27"],
+    "gold_chunk_ids": [],
+    "answer_notes": ""
+  },
+  {
+    "id": "Q03",
+    "question": "What offences are punished by a direct free kick?",
+    "expected_source_ids": ["IFAB-LAW-12-2026-27"],
+    "gold_chunk_ids": [],
+    "answer_notes": ""
+  },
+  {
+    "id": "Q04",
+    "question": "When can a referee apply advantage?",
+    "expected_source_ids": ["IFAB-LAW-05-2026-27", "IFAB-LAW-12-2026-27"],
+    "gold_chunk_ids": [],
+    "answer_notes": ""
+  },
+  {
+    "id": "Q05",
+    "question": "In which situations may VAR intervene?",
+    "expected_source_ids": ["IFAB-VAR-2026-27"],
+    "gold_chunk_ids": [],
+    "answer_notes": ""
+  }
+]
