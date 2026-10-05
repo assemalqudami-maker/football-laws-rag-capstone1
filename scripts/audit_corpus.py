@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCUMENTS = ROOT / "data" / "processed" / "documents.jsonl"
 OUT_JSON = ROOT / "data" / "eval" / "corpus_audit.json"
 OUT_MD = ROOT / "data" / "eval" / "corpus_audit.md"
+LOCK = ROOT / "data" / "source_lock.json"
 
 
 def canonical(text: str) -> str:
@@ -56,6 +57,35 @@ def main() -> None:
     duplicate_groups = [ids for ids in by_hash.values() if len(ids) > 1]
     too_small = [r["source_id"] for r in rows if r["words"] < 100]
 
+    lock_mismatches = []
+    if LOCK.exists():
+        locked = json.loads(LOCK.read_text(encoding="utf-8"))
+        expected = locked.get("documents", {})
+        current_by_id = {row["source_id"]: row for row in rows}
+
+        for source_id, item in expected.items():
+            current = current_by_id.get(source_id)
+            if current is None:
+                lock_mismatches.append(
+                    {"source_id": source_id, "reason": "missing from extracted corpus"}
+                )
+                continue
+            if current["sha256_normalized_text"] != item["sha256_normalized_text"]:
+                lock_mismatches.append(
+                    {
+                        "source_id": source_id,
+                        "reason": "normalized source text changed",
+                        "expected": item["sha256_normalized_text"],
+                        "actual": current["sha256_normalized_text"],
+                    }
+                )
+
+        for source_id in current_by_id:
+            if source_id not in expected:
+                lock_mismatches.append(
+                    {"source_id": source_id, "reason": "not present in source lock"}
+                )
+
     audit = {
         "document_count": len(rows),
         "language_counts": {},
@@ -64,6 +94,8 @@ def main() -> None:
         "total_words": sum(r["words"] for r in rows),
         "exact_duplicate_groups": duplicate_groups,
         "documents_under_100_words": too_small,
+        "source_lock_present": LOCK.exists(),
+        "source_lock_mismatches": lock_mismatches,
         "documents": rows,
     }
 
@@ -88,6 +120,7 @@ def main() -> None:
         f"- Formats: **{audit['format_counts']}**",
         f"- Exact duplicate groups: **{len(duplicate_groups)}**",
         f"- Documents under 100 words: **{len(too_small)}**",
+        f"- Source-lock mismatches: **{len(lock_mismatches)}**",
         "",
         "## Per-source statistics",
         "",
@@ -114,6 +147,11 @@ def main() -> None:
         raise SystemExit("Exact duplicate full documents detected.")
     if too_small:
         raise SystemExit("One or more documents are suspiciously small.")
+    if lock_mismatches:
+        raise SystemExit(
+            "Source-lock mismatch detected. Review upstream changes before updating "
+            "data/source_lock.json."
+        )
 
 
 if __name__ == "__main__":
