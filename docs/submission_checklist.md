@@ -10,7 +10,7 @@
 | Required item | Status | Evidence |
 |---|---|---|
 | 1. Public GitHub repository link | Complete | https://github.com/assemalqudami-maker/football-laws-rag-capstone1 |
-| 2. Live demo URL | Pending deployment | Add Railway public domain after deployment |
+| 2. Live demo URL | Complete | https://football-laws-rag-production.up.railway.app |
 | 3. ADR — one page | Complete | `docs/ADR.md` |
 | 4. RAGAS score on 20 questions | Complete | Mean **0.8655** — `docs/ragas_report.md` |
 | 5. Cost analysis — 1K / 10K / 100K users | Complete | `docs/cost_analysis.md` |
@@ -62,7 +62,7 @@
 - [x] Cost-analysis model and report
 - [x] 20-question RAGAS set and runner
 - [x] Cohere Recall@5 + 20-question RAGAS completed
-- [ ] Deploy to Railway
-- [ ] Generate public Railway domain
+- [x] Deploy to Railway
+- [x] Generate public Railway domain — https://football-laws-rag-production.up.railway.app
 - [ ] Complete three real-user tests
-- [ ] Add live URL and final RAGAS score to README
+- [x] Add live URL and final RAGAS score to README
