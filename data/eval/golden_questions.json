@@ -1,37 +1,313 @@
 [
   {
     "id": "Q01",
-    "question": "When is a player in an offside position?",
-    "expected_source_ids": ["IFAB-LAW-11-2026-27"],
-    "gold_chunk_ids": [],
-    "answer_notes": ""
+    "question": "What are the permitted touchline lengths for an international match?",
+    "expected_source_ids": [
+      "IFAB-LAW-01-2026-27"
+    ],
+    "gold_phrases": [
+      "minimum 100 m (110 yds)",
+      "maximum 110 m (120 yds)"
+    ]
   },
   {
     "id": "Q02",
-    "question": "Is being in an offside position itself an offence?",
-    "expected_source_ids": ["IFAB-LAW-11-2026-27"],
-    "gold_chunk_ids": [],
-    "answer_notes": ""
+    "question": "What is the official width of a football goal between the inside of the posts?",
+    "expected_source_ids": [
+      "IFAB-LAW-01-2026-27"
+    ],
+    "gold_phrases": [
+      "7.32 m (8 yds)"
+    ]
   },
   {
     "id": "Q03",
-    "question": "What offences are punished by a direct free kick?",
-    "expected_source_ids": ["IFAB-LAW-12-2026-27"],
-    "gold_chunk_ids": [],
-    "answer_notes": ""
+    "question": "What circumference must the match ball have?",
+    "expected_source_ids": [
+      "IFAB-LAW-02-2026-27"
+    ],
+    "gold_phrases": [
+      "between 68 cm (27 ins) and 70 cm (28 ins)"
+    ]
   },
   {
     "id": "Q04",
-    "question": "When can a referee apply advantage?",
-    "expected_source_ids": ["IFAB-LAW-05-2026-27", "IFAB-LAW-12-2026-27"],
-    "gold_chunk_ids": [],
-    "answer_notes": ""
+    "question": "Can a match start or continue if a team has fewer than seven players?",
+    "expected_source_ids": [
+      "IFAB-LAW-03-2026-27"
+    ],
+    "gold_phrases": [
+      "fewer than seven players"
+    ]
   },
   {
     "id": "Q05",
-    "question": "In which situations may VAR intervene?",
-    "expected_source_ids": ["IFAB-VAR-2026-27"],
-    "gold_chunk_ids": [],
-    "answer_notes": ""
+    "question": "What is the maximum number of substitutes that may be used in an official competition under the general Law 3 rule?",
+    "expected_source_ids": [
+      "IFAB-LAW-03-2026-27"
+    ],
+    "gold_phrases": [
+      "up to a maximum of five"
+    ]
+  },
+  {
+    "id": "Q06",
+    "question": "How quickly must a player being substituted normally leave the field after the substitution is indicated?",
+    "expected_source_ids": [
+      "IFAB-LAW-03-2026-27"
+    ],
+    "gold_phrases": [
+      "within ten seconds"
+    ]
+  },
+  {
+    "id": "Q07",
+    "question": "Are shinguards compulsory equipment for players?",
+    "expected_source_ids": [
+      "IFAB-LAW-04-2026-27"
+    ],
+    "gold_phrases": [
+      "Shinguards are compulsory for all players"
+    ]
+  },
+  {
+    "id": "Q08",
+    "question": "When should the referee allow advantage after an offence?",
+    "expected_source_ids": [
+      "IFAB-LAW-05-2026-27"
+    ],
+    "gold_phrases": [
+      "the non-offending team will benefit from the advantage"
+    ]
+  },
+  {
+    "id": "Q09",
+    "question": "Who has the final decision when other match officials assist the referee?",
+    "expected_source_ids": [
+      "IFAB-LAW-06-2026-27"
+    ],
+    "gold_phrases": [
+      "the final decision will always be taken by the referee"
+    ]
+  },
+  {
+    "id": "Q10",
+    "question": "What offside-related duty do assistant referees have?",
+    "expected_source_ids": [
+      "IFAB-LAW-06-2026-27"
+    ],
+    "gold_phrases": [
+      "a player in an offside position may be penalised"
+    ]
+  },
+  {
+    "id": "Q11",
+    "question": "How long are the two halves of a standard match?",
+    "expected_source_ids": [
+      "IFAB-LAW-07-2026-27"
+    ],
+    "gold_phrases": [
+      "two equal halves of 45 minutes"
+    ]
+  },
+  {
+    "id": "Q12",
+    "question": "What is the maximum normal half-time interval?",
+    "expected_source_ids": [
+      "IFAB-LAW-07-2026-27"
+    ],
+    "gold_phrases": [
+      "not exceeding 15 minutes"
+    ]
+  },
+  {
+    "id": "Q13",
+    "question": "If play is stopped while the ball is inside the penalty area, who receives the dropped ball?",
+    "expected_source_ids": [
+      "IFAB-LAW-08-2026-27"
+    ],
+    "gold_phrases": [
+      "dropped for the defending team goalkeeper"
+    ]
+  },
+  {
+    "id": "Q14",
+    "question": "Is simply being in an offside position an offence?",
+    "expected_source_ids": [
+      "IFAB-LAW-11-2026-27"
+    ],
+    "gold_phrases": [
+      "It is not an offence to be in an offside position"
+    ]
+  },
+  {
+    "id": "Q15",
+    "question": "Are a player's hands and arms considered when judging offside position?",
+    "expected_source_ids": [
+      "IFAB-LAW-11-2026-27"
+    ],
+    "gold_phrases": [
+      "The hands and arms of all players"
+    ]
+  },
+  {
+    "id": "Q16",
+    "question": "From which three restarts can a player receive the ball directly without an offside offence?",
+    "expected_source_ids": [
+      "IFAB-LAW-11-2026-27"
+    ],
+    "gold_phrases": [
+      "a goal kick",
+      "a throw-in",
+      "a corner kick"
+    ]
+  },
+  {
+    "id": "Q17",
+    "question": "Is every touch of the hand or arm with the ball a handball offence?",
+    "expected_source_ids": [
+      "IFAB-LAW-12-2026-27"
+    ],
+    "gold_phrases": [
+      "Not every touch of a player’s hand/arm with the ball is an offence"
+    ]
+  },
+  {
+    "id": "Q18",
+    "question": "When can hand or arm position make the body unnaturally bigger for handball?",
+    "expected_source_ids": [
+      "IFAB-LAW-12-2026-27"
+    ],
+    "gold_phrases": [
+      "made their body unnaturally bigger"
+    ]
+  },
+  {
+    "id": "Q19",
+    "question": "What is the sanction for deliberate handball that denies a goal or obvious goal-scoring opportunity?",
+    "expected_source_ids": [
+      "IFAB-LAW-12-2026-27"
+    ],
+    "gold_phrases": [
+      "deliberate handball offence",
+      "the player is sent off"
+    ]
+  },
+  {
+    "id": "Q20",
+    "question": "What type of challenge must be sanctioned as serious foul play?",
+    "expected_source_ids": [
+      "IFAB-LAW-12-2026-27"
+    ],
+    "gold_phrases": [
+      "endangers the safety of an opponent",
+      "uses excessive force or brutality"
+    ]
+  },
+  {
+    "id": "Q21",
+    "question": "How does the Law define violent conduct when a player is not challenging for the ball?",
+    "expected_source_ids": [
+      "IFAB-LAW-12-2026-27"
+    ],
+    "gold_phrases": [
+      "when not challenging for the ball"
+    ]
+  },
+  {
+    "id": "Q22",
+    "question": "What distance must opponents normally respect at a free kick?",
+    "expected_source_ids": [
+      "IFAB-LAW-13-2026-27"
+    ],
+    "gold_phrases": [
+      "9.15 m"
+    ]
+  },
+  {
+    "id": "Q23",
+    "question": "How far must attacking players remain from a defensive wall of three or more players at a free kick?",
+    "expected_source_ids": [
+      "IFAB-LAW-13-2026-27"
+    ],
+    "gold_phrases": [
+      "at least 1 m from the ‘wall’"
+    ]
+  },
+  {
+    "id": "Q24",
+    "question": "Where must the defending goalkeeper's foot be at the moment a penalty kick is taken?",
+    "expected_source_ids": [
+      "IFAB-LAW-14-2026-27"
+    ],
+    "gold_phrases": [
+      "at least part of one foot touching, in line with, or behind, the goal line"
+    ]
+  },
+  {
+    "id": "Q25",
+    "question": "Can a goal be scored directly from a throw-in?",
+    "expected_source_ids": [
+      "IFAB-LAW-15-2026-27"
+    ],
+    "gold_phrases": [
+      "a goal cannot be scored directly from a throw-in"
+    ]
+  },
+  {
+    "id": "Q26",
+    "question": "What happens if an opponent is still inside the penalty area at a goal kick because there was no time to leave?",
+    "expected_source_ids": [
+      "IFAB-LAW-16-2026-27"
+    ],
+    "gold_phrases": [
+      "the referee allows play to continue"
+    ]
+  },
+  {
+    "id": "Q27",
+    "question": "During a penalty shoot-out, may the kicker deliberately play the ball a second time?",
+    "expected_source_ids": [
+      "IFAB-LAW-10-2026-27"
+    ],
+    "gold_phrases": [
+      "the kicker may not deliberately play the ball a second time"
+    ]
+  },
+  {
+    "id": "Q28",
+    "question": "What four categories of decisions or incidents may VAR assist the referee with?",
+    "expected_source_ids": [
+      "IFAB-VAR-2026-27"
+    ],
+    "gold_phrases": [
+      "Goal/no goal",
+      "Penalty/no penalty",
+      "Mistaken identity"
+    ]
+  },
+  {
+    "id": "Q29",
+    "question": "When will the 'Only the captain' guidelines become compulsory for all competitions?",
+    "expected_source_ids": [
+      "IFAB-CAPTAIN-GUIDELINES"
+    ],
+    "gold_phrases": [
+      "starting on or after 1st July 2027",
+      "starting on or after 1 st July 2027"
+    ]
+  },
+  {
+    "id": "Q30",
+    "question": "How many substitutes may now be used in senior 'A' international team friendly matches under the 2026/27 change?",
+    "expected_source_ids": [
+      "IFAB-CHANGES-2026-27",
+      "IFAB-LAW-03-2026-27"
+    ],
+    "gold_phrases": [
+      "maximum of six eight may be used",
+      "maximum of eight may be used",
+      "increased to eight"
+    ]
   }
 ]
