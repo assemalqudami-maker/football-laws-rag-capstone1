@@ -1,0 +1,52 @@
+name: Corpus validation
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-corpus:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Validate source manifest
+        run: python scripts/check_sources.py
+
+      - name: Collect official IFAB sources
+        run: python scripts/collect_sources.py
+
+      - name: Extract source text
+        run: python scripts/extract_sources.py
+
+      - name: Audit corpus
+        run: python scripts/audit_corpus.py
+
+      - name: Upload corpus audit and extracted corpus
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: football-laws-corpus
+          path: |
+            data/sources_manifest.csv
+            data/processed/
+            data/eval/extraction_report.json
+            data/eval/corpus_audit.json
+            data/eval/corpus_audit.md
+          retention-days: 7
