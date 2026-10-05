@@ -10,9 +10,9 @@ def main() -> None:
     parser.add_argument("--queries-per-user", type=float, default=10)
     parser.add_argument("--input-tokens", type=float, default=3500)
     parser.add_argument("--output-tokens", type=float, default=250)
-    parser.add_argument("--input-price", type=float, default=0.05,
+    parser.add_argument("--input-price", type=float, default=0.10,
                         help="USD per 1M input tokens")
-    parser.add_argument("--output-price", type=float, default=0.25,
+    parser.add_argument("--output-price", type=float, default=0.50,
                         help="USD per 1M output tokens")
     args = parser.parse_args()
 
