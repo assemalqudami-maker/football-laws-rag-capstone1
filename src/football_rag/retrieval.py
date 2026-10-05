@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -55,6 +57,18 @@ class HybridRetriever:
 
         self.local_reranker = None
         self.cohere_client = None
+        self._cohere_rate_error = None
+        self._cohere_rerank_lock = threading.Lock()
+        self._cohere_last_rerank_at = 0.0
+        self._cohere_rerank_min_interval = float(
+            os.getenv("COHERE_RERANK_MIN_INTERVAL_SECONDS", "0")
+        )
+        self._cohere_429_backoff = float(
+            os.getenv("COHERE_429_BACKOFF_SECONDS", "65")
+        )
+        self._cohere_max_retries = int(
+            os.getenv("COHERE_MAX_RETRIES", "4")
+        )
 
         if self.use_reranker:
             if self.reranker_provider == "local":
@@ -66,8 +80,10 @@ class HybridRetriever:
                         "COHERE_API_KEY is required when RERANK_PROVIDER=cohere."
                     )
                 import cohere
+                from cohere.errors import TooManyRequestsError
 
                 self.cohere_client = cohere.ClientV2(api_key=api_key)
+                self._cohere_rate_error = TooManyRequestsError
             else:
                 raise ValueError(
                     "reranker_provider must be 'cohere' or 'local'."
@@ -116,12 +132,40 @@ class HybridRetriever:
         question: str,
         candidates: list[dict[str, Any]],
     ) -> list[dict[str, Any]]:
-        response = self.cohere_client.rerank(
-            model=COHERE_RERANK_MODEL,
-            query=question,
-            documents=[c["content"] for c in candidates],
-            top_n=len(candidates),
-        )
+        documents = [c["content"] for c in candidates]
+
+        response = None
+        for attempt in range(1, self._cohere_max_retries + 2):
+            # A Cohere trial key allows only 10 Rerank requests/minute.
+            # The minimum interval is configurable so production keys do not
+            # have to inherit the trial-key throttle.
+            with self._cohere_rerank_lock:
+                elapsed = time.monotonic() - self._cohere_last_rerank_at
+                wait_for = self._cohere_rerank_min_interval - elapsed
+                if wait_for > 0:
+                    print(
+                        f"[Cohere] Rerank throttle: sleeping {wait_for:.1f}s"
+                    )
+                    time.sleep(wait_for)
+                self._cohere_last_rerank_at = time.monotonic()
+
+            try:
+                response = self.cohere_client.rerank(
+                    model=COHERE_RERANK_MODEL,
+                    query=question,
+                    documents=documents,
+                    top_n=len(candidates),
+                )
+                break
+            except self._cohere_rate_error:
+                if attempt > self._cohere_max_retries:
+                    raise
+                print(
+                    "[Cohere] Rerank rate limit reached; "
+                    f"sleeping {self._cohere_429_backoff:.0f}s "
+                    f"before retry {attempt}/{self._cohere_max_retries}."
+                )
+                time.sleep(self._cohere_429_backoff)
 
         ranked = []
         for item in response.results:
