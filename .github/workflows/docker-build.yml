@@ -45,7 +45,8 @@ jobs:
             -e PORT=7860 \
             -e APP_USERNAME=ci-user \
             -e APP_PASSWORD=ci-password \
-            -e OPENAI_API_KEY=ci-placeholder \
+            -e COHERE_API_KEY=ci-placeholder \
+            -e RERANK_PROVIDER=cohere \
             football-laws-rag:ci
 
       - name: Smoke-test Streamlit health endpoint
