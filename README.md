@@ -1,76 +1,160 @@
 # Football Laws Referee RAG
 
-A production-style Retrieval-Augmented Generation (RAG) capstone project focused on the **Laws of Association Football and refereeing**, using official IFAB sources and an English-only interface.
+A production-style Retrieval-Augmented Generation system for **association-football refereeing and the IFAB Laws of the Game**. The project is English-only and is being built for the Track B RAG capstone.
 
-## Capstone target
+## What the system does
 
-This repository is being built from scratch to satisfy the Track B requirements:
+A user asks a football-law question. The system performs dense retrieval and BM25 keyword retrieval, fuses the results with Reciprocal Rank Fusion (RRF), reranks the candidates, and sends the strongest five pieces of IFAB evidence to an LLM. The answer is constrained to that evidence and displays its sources.
 
-1. **Domain and sources** — 20–50 high-quality documents and a documented domain.
-2. **Ingestion** — reproducible loading, cleaning, chunking, embeddings, and vector storage with written architectural justification.
-3. **Retrieval** — hybrid retrieval (dense + BM25), reranking, 30 golden questions, and Recall@5 >= 80%.
-4. **Interface** — Streamlit UI with simple authentication and citations.
-5. **Deployment and evaluation** — public deployment, RAGAS evaluation, cost analysis, and a one-page ADR.
+## Verified corpus
 
-## Domain
+The automated corpus pipeline has successfully collected and extracted **31/31 official IFAB sources**:
 
-The system answers questions about football refereeing and the Laws of the Game. It is intended for referees, referee trainees, coaches, players, and fans who need grounded answers with traceable evidence.
+- 31 English documents
+- 29 HTML sources
+- 2 PDF publications
+- 71,191 extracted words
+- 414,538 extracted characters
+- 0 exact full-document duplicate groups
+- 0 suspicious documents under 100 words
 
-The authoritative source family is **The International Football Association Board (IFAB)**. The initial corpus is English-only and targets the **2026/27** Laws of the Game plus current IFAB protocols and practical guidelines.
+The source manifest is `data/sources_manifest.csv`. Raw IFAB snapshots and derived text are reproducibly collected but are not committed to this public repository.
+
+## Architecture
+
+```text
+Official IFAB sources
+        ↓
+Validation + download + checksum
+        ↓
+HTML/PDF extraction + source metadata
+        ↓
+Section-aware chunking (~600 tokens, 90-token overlap)
+        ↓
+┌───────────────────┬──────────────────┐
+│ BGE dense retrieval│ BM25 retrieval   │
+└─────────┬─────────┴─────────┬────────┘
+          └────── RRF fusion ─┘
+                    ↓
+           Cross-encoder reranker
+                    ↓
+               Top-5 evidence
+                    ↓
+        Grounded OpenAI Responses API
+                    ↓
+       Answer + official IFAB citations
+```
+
+Current retrieval components:
+
+- Dense embedding model: `BAAI/bge-small-en-v1.5`
+- Vector store: Chroma
+- Lexical retrieval: BM25
+- Fusion: RRF
+- Reranker: `cross-encoder/ms-marco-MiniLM-L-6-v2`
+- Generator default: `gpt-6-luna`
+- Interface: Streamlit
+- Authentication: username/password from environment secrets
+
+See `architecture.md` and `docs/ADR.md` for the decision rationale.
+
+## Evaluation
+
+The repository contains a fixed **30-question golden retrieval set**. The build resolves each human-authored evidence anchor to concrete chunk IDs before measuring Recall@5. Automated evaluation compares:
+
+1. BM25
+2. dense retrieval
+3. hybrid dense + BM25 using RRF
+4. hybrid + reranking
+
+The required target is **Recall@5 >= 80%**. Results are written as CI artifacts; a score is not claimed until the run completes.
+
+A separate **20-question RAGAS** set and runner are included. RAGAS requires an OpenAI API key and must be run only after retrieval has passed the target.
 
 ## Repository layout
 
 ```text
 .
-├── app/                  # Streamlit application
+├── app/
+│   └── streamlit_app.py
 ├── data/
-│   ├── raw/              # Downloaded source snapshots (ignored by Git)
-│   ├── processed/        # Cleaned/chunked data (ignored by Git)
-│   ├── eval/             # Golden questions and evaluation outputs
+│   ├── eval/
 │   └── sources_manifest.csv
-├── docs/                 # ADR, cost analysis, reports
-├── scripts/              # Collection, ingestion, retrieval, evaluation
-├── tests/
+├── docs/
+│   ├── ADR.md
+│   ├── cost_analysis.md
+│   ├── deployment.md
+│   └── user_testing.md
+├── scripts/
+│   ├── check_sources.py
+│   ├── collect_sources.py
+│   ├── extract_sources.py
+│   ├── audit_corpus.py
+│   ├── build_chunks.py
+│   ├── label_gold_chunks.py
+│   ├── build_index.py
+│   ├── evaluate_recall.py
+│   ├── summarize_retrieval.py
+│   ├── ask.py
+│   ├── run_ragas.py
+│   └── cost_analysis.py
+├── src/football_rag/
+├── Dockerfile
 ├── domain.md
 ├── architecture.md
 └── requirements.txt
 ```
 
-## Source policy
-
-The repository stores a manifest of official IFAB source URLs. The collector downloads snapshots locally for reproducible ingestion. Raw third-party source text is not committed to the public repository by default; only metadata, code, evaluation sets, and derived project artifacts are versioned.
-
-## Current status
-
-- [x] GitHub repository connected
-- [x] Project initialized from scratch
-- [x] English-only football refereeing domain defined
-- [x] Initial official IFAB source manifest prepared
-- [ ] Run source collection and validation
-- [ ] Build chunking and ingestion pipeline
-- [ ] Add dense retrieval + BM25 + reranking
-- [ ] Build 30-question golden set and reach Recall@5 >= 80%
-- [ ] Build Streamlit UI + authentication
-- [ ] Run RAGAS
-- [ ] Write cost analysis and ADR
-- [ ] Deploy publicly
-
-## Data provenance
-
-All football-law content used by the RAG system must come from official IFAB pages or official IFAB publications listed in `data/sources_manifest.csv`. The system must answer from retrieved evidence and abstain when the corpus does not support an answer.
-
-## Local setup
+## Local build
 
 ```bash
 python -m venv .venv
+
 # Windows
 .venv\Scripts\activate
+
 # macOS/Linux
 source .venv/bin/activate
 
 pip install -r requirements.txt
 python scripts/check_sources.py
 python scripts/collect_sources.py
+python scripts/extract_sources.py
+python scripts/audit_corpus.py
+python scripts/build_chunks.py
+python scripts/label_gold_chunks.py
+python scripts/build_index.py
+python scripts/evaluate_recall.py --mode hybrid
 ```
 
-The next development step is to validate and collect the official source corpus, then build the ingestion pipeline.
+Create a local `.env` from `.env.example`, but never commit your real API key.
+
+To run the interface after building the index:
+
+```bash
+streamlit run app/streamlit_app.py
+```
+
+## Capstone status
+
+- [x] Public GitHub repository
+- [x] English-only football refereeing domain
+- [x] 20–50 official sources (31 verified)
+- [x] Reproducible source collection and corpus audit
+- [x] Documented chunking / embedding / vector-store decisions
+- [x] Hybrid dense + BM25 retrieval
+- [x] RRF fusion and reranking
+- [x] 30-question golden set and automated Recall@5 evaluation
+- [x] Streamlit UI
+- [x] Simple authentication
+- [x] Docker deployment configuration
+- [x] One-page ADR
+- [x] Cost analysis for 1K / 10K / 100K users
+- [ ] Confirm measured Recall@5 >= 80%
+- [ ] Run 20-question RAGAS evaluation
+- [ ] Test with three real users
+- [ ] Deploy and add the public live-demo URL
+
+## Safety and scope
+
+The application is educational. It does not replace IFAB, competition regulations, or the referee's authority in a real match. If retrieved evidence does not establish an answer, the generator is instructed to say so rather than guess.
