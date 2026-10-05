@@ -1,4 +1,8 @@
-"""Run the required 20-question RAGAS evaluation with Cohere."""
+"""Run the required 20-question RAGAS evaluation with Cohere.
+
+This file intentionally uses Instructor's current Cohere V2 integration instead
+of importing the non-existent `cohere.Cohere` class.
+"""
 
 from __future__ import annotations
 
@@ -8,20 +12,66 @@ import os
 import sys
 import time
 from pathlib import Path
+from typing import TypeVar
 
-from cohere import Cohere
+import instructor
 from cohere.errors import TooManyRequestsError
+from pydantic import BaseModel
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from football_rag.generation import FootballLawsRAG  # noqa: E402
 from ragas.embeddings.base import embedding_factory  # noqa: E402
-from ragas.llms import llm_factory  # noqa: E402
+from ragas.llms.base import InstructorBaseRagasLLM  # noqa: E402
 from ragas.metrics.collections import AnswerRelevancy, Faithfulness  # noqa: E402
 
 DATASET = ROOT / "data" / "eval" / "ragas_questions.json"
 OUT = ROOT / "data" / "eval" / "ragas_report.json"
+
+ResponseModelT = TypeVar("ResponseModelT", bound=BaseModel)
+
+
+class CohereRagasLLM(InstructorBaseRagasLLM):
+    """Small RAGAS adapter around Instructor's Cohere V2 client."""
+
+    def __init__(self, model: str, api_key: str) -> None:
+        self.model = model
+        provider_model = f"cohere/{model}"
+
+        self.sync_client = instructor.from_provider(
+            provider_model,
+            api_key=api_key,
+            max_tokens=2048,
+        )
+        self.async_client = instructor.from_provider(
+            provider_model,
+            async_client=True,
+            api_key=api_key,
+            max_tokens=2048,
+        )
+
+    def generate(
+        self,
+        prompt: str,
+        response_model: type[ResponseModelT],
+    ) -> ResponseModelT:
+        return self.sync_client.create(
+            messages=[{"role": "user", "content": prompt}],
+            response_model=response_model,
+            temperature=0.01,
+        )
+
+    async def agenerate(
+        self,
+        prompt: str,
+        response_model: type[ResponseModelT],
+    ) -> ResponseModelT:
+        return await self.async_client.create(
+            messages=[{"role": "user", "content": prompt}],
+            response_model=response_model,
+            temperature=0.01,
+        )
 
 
 def is_rate_limit_error(exc: Exception) -> bool:
@@ -82,11 +132,9 @@ async def main() -> None:
     )
     embed_model = os.getenv("RAGAS_EMBED_MODEL", "embed-v4.0")
 
-    judge_client = Cohere(api_key=api_key)
-    judge_llm = llm_factory(
-        judge_model,
-        provider="cohere",
-        client=judge_client,
+    judge_llm = CohereRagasLLM(
+        model=judge_model,
+        api_key=api_key,
     )
     judge_embeddings = embedding_factory(
         "litellm",
