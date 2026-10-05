@@ -24,13 +24,22 @@ def main() -> None:
         default="hybrid",
     )
     parser.add_argument("--no-rerank", action="store_true")
+    parser.add_argument(
+        "--reranker-provider",
+        choices=["local", "cohere"],
+        default="local",
+        help="Used only when reranking is enabled.",
+    )
     args = parser.parse_args()
 
     golden = json.loads(GOLDEN.read_text(encoding="utf-8"))
     if len(golden) != 30:
         raise SystemExit(f"Expected 30 golden questions, found {len(golden)}.")
 
-    retriever = HybridRetriever(use_reranker=not args.no_rerank)
+    retriever = HybridRetriever(
+        use_reranker=not args.no_rerank,
+        reranker_provider=args.reranker_provider,
+    )
 
     hits = 0
     details = []
@@ -79,6 +88,9 @@ def main() -> None:
     report = {
         "mode": args.mode,
         "reranking": not args.no_rerank,
+        "reranker_provider": (
+            args.reranker_provider if not args.no_rerank else None
+        ),
         "hits": hits,
         "questions": len(golden),
         "recall_at_5": recall,
