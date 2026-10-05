@@ -1,6 +1,8 @@
 # Football Laws Referee RAG
 
-A production-style Retrieval-Augmented Generation system for **association-football refereeing and the IFAB Laws of the Game**. The project is English-only and is being built for the Track B RAG capstone.
+A production-style Retrieval-Augmented Generation system for **association-football refereeing and the IFAB Laws of the Game**. The project is English-only and is deployed publicly for the Track B RAG capstone.
+
+**Live demo:** https://football-laws-rag-production.up.railway.app
 
 ## What the system does
 
@@ -72,7 +74,7 @@ The required target is **Recall@5 >= 80%**. The credential-free local cross-enco
 
 A separate **20-question RAGAS** evaluation has been completed using Cohere Command A as the evaluator LLM and Cohere Embed v4 for embedding-dependent metrics. Final scores: **Faithfulness 0.9675**, **Answer Relevancy 0.7635**, **Mean RAGAS 0.8655**. See `docs/ragas_report.md`.
 
-The production Docker build and Streamlit health check also pass in GitHub Actions, so the repository is ready for Railway deployment once deployment secrets are configured.
+The production Docker build and Streamlit health check pass in GitHub Actions. The application is deployed on Railway at **https://football-laws-rag-production.up.railway.app**; the live service reports healthy and the Streamlit health endpoint returns HTTP 200.
 
 ## Repository layout
 
@@ -158,7 +160,7 @@ streamlit run app/streamlit_app.py
 - [x] Measure final Recall@5 with Cohere `rerank-v4.0-pro` — **93.3% (28/30)**
 - [x] Run 20-question RAGAS evaluation — **mean 0.8655**
 - [ ] Test with three real users
-- [ ] Deploy to Railway and add the public live-demo URL
+- [x] Deploy to Railway — **https://football-laws-rag-production.up.railway.app**
 
 ## Safety and scope
 
