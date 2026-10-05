@@ -1,26 +1,26 @@
 # ADR-001 — Football Laws RAG Architecture
 
-**Status:** Accepted for implementation; retrieval quality must still pass the measured Recall@5 gate before final submission.  
+**Status:** Accepted  
 **Date:** 5 October 2026
 
 ## Context
 
-The system must answer English questions about football refereeing from 20–50 authoritative documents, show evidence, use hybrid search plus reranking, reach at least 80% Recall@5 on 30 golden questions, expose a simple authenticated web UI, and be deployable at low cost. The corpus is small but terminology is exact and rule exceptions matter, so both semantic matching and literal legal terms must be preserved.
+The capstone requires an English RAG system over 20–50 high-quality documents, hybrid retrieval with reranking, a fixed 30-question golden set, Recall@5 of at least 80%, an authenticated Streamlit or Gradio interface, public deployment, RAGAS evaluation, cost analysis, and a one-page architecture decision record. Football law is a high-precision domain: exact terminology, exceptions, sanctions, and source authority matter.
 
 ## Decision
 
-The corpus uses official IFAB material only and targets the 2026/27 Laws of the Game. Source snapshots are downloaded reproducibly from the version-controlled manifest during build; full third-party source text is not committed to Git.
+The core corpus contains **31 official IFAB sources** for the 2026/27 Laws of the Game and related protocols/guidance. Unofficial commentary is excluded. The build stores provenance in a manifest and pins normalized extracted-source hashes in `data/source_lock.json`; if the upstream source text changes, the audit fails rather than silently changing the corpus.
 
-Extraction uses BeautifulSoup for HTML and PyMuPDF for PDFs while preserving source URL, title, section, season, and page metadata. The baseline chunker is section-aware and uses approximately 600-token windows with 90-token overlap. This is preferred over blind fixed-size splitting because IFAB rules are organised by Law, subsection, condition, sanction, and exception.
+HTML is extracted with BeautifulSoup and PDFs with PyMuPDF. Metadata such as source ID, title, URL, section, season, and page number is retained. Chunking is structure-aware: IFAB headings, paragraphs, bullets, and PDF page boundaries are preserved, while long sections use approximately 600-token windows with 90-token overlap. This produced 1,031 chunks with a median of 103 tokens and a maximum of 609, reflecting the deliberately short legal/rule units in the source material.
 
-Dense retrieval uses **BAAI/bge-small-en-v1.5** with normalized embeddings stored in **Chroma**. It was chosen as a compact English retrieval model that can run locally and avoids recurring embedding API cost. Chroma is appropriate because the corpus is small, persistent local indexing is simple, and no external vector-database service is required.
+Dense retrieval uses **BAAI/bge-small-en-v1.5** with normalized embeddings stored in **Chroma**. The model is compact, English-focused, and can run locally, avoiding recurring embedding API cost. Chroma was selected because the corpus is small, persistence and metadata filtering are straightforward, and an external vector service would add unnecessary operational complexity.
 
-Retrieval is **hybrid**: dense search plus **BM25**, fused with **Reciprocal Rank Fusion (RRF)**. BM25 protects exact terms such as DOGSO, VAR, measurements, and disciplinary wording while dense retrieval handles paraphrases. The top candidate set is reranked locally with **cross-encoder/ms-marco-MiniLM-L-6-v2**, then the best five chunks are sent to generation.
+Retrieval is hybrid: **dense search + BM25 + Reciprocal Rank Fusion (RRF)**. A local **cross-encoder/ms-marco-MiniLM-L-6-v2** reranks the fused candidates, and the best five chunks are passed to generation. On the fixed 30-question set, BM25 reached 90.0% Recall@5, dense retrieval 86.7%, hybrid RRF 86.7%, and **hybrid + reranking reached 93.3% (28/30)**. The reranked hybrid configuration is therefore the production choice and exceeds the required 80% target.
 
-Generation uses the OpenAI **Responses API** with a low-cost model configured through `OPENAI_MODEL` (baseline: `gpt-6-luna`). The prompt requires answers only from retrieved IFAB evidence, bracket citations, and explicit abstention when evidence is insufficient. Secrets are provided only through environment variables.
+Generation uses the OpenAI **Responses API**, configurable through `OPENAI_MODEL`, with `gpt-6-luna` as the cost-focused baseline. The model is instructed to answer only from supplied IFAB evidence, cite retrieved sources, and abstain when evidence is insufficient. The Streamlit interface uses simple environment-variable authentication and exposes the answer, evidence, official source links, and response latency.
 
-The interface is **Streamlit** with username/password authentication from deployment secrets. Deployment uses a Docker image so the same build can run on Hugging Face Spaces or Railway. During the image build the corpus is collected, extracted, chunked, and indexed, avoiding the need to publish raw IFAB text in the Git repository.
+Deployment uses a reproducible Docker image on **Railway**. Local embeddings and reranking minimize recurring API charges; paid model usage is limited primarily to answer generation and the intentionally manual 20-question RAGAS evaluation.
 
 ## Consequences
 
-This architecture minimizes recurring cost and vendor dependence in retrieval, keeps provenance auditable, and satisfies the required hybrid/rerank design. The trade-offs are larger Docker builds, model-download time, and CPU reranking latency. Final acceptance depends on measured Recall@5 >= 80%, a 20-question RAGAS report, three real-user tests, and successful public deployment.
+The architecture prioritizes provenance, low recurring retrieval cost, and measurable retrieval quality. Trade-offs are a larger container image, model download/build time, and CPU reranking latency. The retrieval requirement is already satisfied at 93.3% Recall@5. Final submission completion still requires a successful public Railway URL, the 20-question RAGAS run using the student's API credentials, and feedback from three real users.
