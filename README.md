@@ -159,7 +159,7 @@ streamlit run app/streamlit_app.py
 - [x] Local reranker baseline Recall@5 >= 80% — **93.3% (28/30)**
 - [x] Measure final Recall@5 with Cohere `rerank-v4.0-pro` — **93.3% (28/30)**
 - [x] Run 20-question RAGAS evaluation — **mean 0.8655**
-- [ ] Test with three real users
+- [x] Test with three real users
 - [x] Deploy to Railway — **https://football-laws-rag-production.up.railway.app**
 
 ## Safety and scope
