@@ -71,6 +71,7 @@ class FootballLawsRAG:
             model=self.model,
             instructions=instructions,
             input=user_input,
+            reasoning={"effort": "none"},
             max_output_tokens=500,
         )
 
