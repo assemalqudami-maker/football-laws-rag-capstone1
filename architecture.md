@@ -2,7 +2,7 @@
 
 ## Status
 
-This file begins as an architectural plan. Decisions become final only after measurement on the project corpus.
+The corpus, chunking baseline, dense index, hybrid retrieval, and reranking pipeline are implemented and measured. The selected hybrid + reranking configuration achieves **Recall@5 = 93.3% (28/30)** on the fixed golden set, exceeding the 80% capstone target. Generation, RAGAS evaluation, and public deployment remain dependent on configured deployment/API credentials.
 
 ## High-level pipeline
 
@@ -211,3 +211,15 @@ Final deployment choice will be based on:
 - separate ingestion from query execution;
 - test evaluation on small samples before full RAGAS runs;
 - log model, parameters, corpus version, and date for every evaluation run.
+
+
+## Measured retrieval result
+
+On the fixed 30-question golden set:
+
+- BM25: 90.0% Recall@5
+- Dense: 86.7% Recall@5
+- Hybrid RRF: 86.7% Recall@5
+- Hybrid + reranking: **93.3% Recall@5**
+
+The production retriever therefore keeps the required hybrid design and reranking stage. See `docs/retrieval_evaluation.md` for the reproducible comparison.
