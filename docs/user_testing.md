@@ -24,12 +24,12 @@ Each tester uses the deployed application, reviews the answers and IFAB evidence
 
 ## Tester 2 — Osamah
 
-- Answers clear:
-- Answers correct/useful:
-- Checked IFAB source/evidence:
-- What the tester liked:
-- Problem found:
-- Overall rating (1–5):
+- Answers clear: **Yes**
+- Answers correct/useful: **Yes**
+- Checked IFAB source/evidence: **No**
+- What the tester liked: **The answers are short and clear.**
+- Problem found: **There are only a few example questions.**
+- Overall rating (1–5): **4.5/5**
 
 ---
 
