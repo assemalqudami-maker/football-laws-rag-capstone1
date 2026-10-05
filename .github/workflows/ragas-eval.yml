@@ -1,0 +1,66 @@
+name: RAGAS evaluation
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ragas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_MODEL: gpt-6-luna
+      RAGAS_JUDGE_MODEL: gpt-6-luna
+      RAGAS_EMBED_MODEL: text-embedding-3-small
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Verify API secret
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::OPENAI_API_KEY repository secret is required."
+            exit 1
+          fi
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install CPU PyTorch
+        run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Install project dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build verified corpus and retrieval index
+        run: |
+          python scripts/check_sources.py
+          python scripts/collect_sources.py
+          python scripts/extract_sources.py
+          python scripts/audit_corpus.py
+          python scripts/build_chunks.py
+          python scripts/label_gold_chunks.py
+          python scripts/build_index.py
+
+      - name: Retrieval sanity check
+        run: python scripts/evaluate_recall.py --mode hybrid
+
+      - name: Run 20-question RAGAS evaluation
+        run: python scripts/run_ragas.py
+
+      - name: Upload RAGAS report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ragas-report
+          path: |
+            data/eval/ragas_report.json
+            data/eval/recall_report.json
+          retention-days: 14
