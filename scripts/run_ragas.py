@@ -1,4 +1,4 @@
-"""Run a 20-question RAGAS evaluation and save a reproducible report."""
+"""Run the required 20-question RAGAS evaluation with Cohere."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 
-from openai import AsyncOpenAI
+from cohere import Cohere
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -27,18 +27,33 @@ async def main() -> None:
     if len(questions) != 20:
         raise SystemExit(f"Expected 20 RAGAS questions, found {len(questions)}.")
 
-    model = os.getenv("RAGAS_JUDGE_MODEL", "gpt-6-luna")
-    client = AsyncOpenAI()
+    api_key = os.getenv("COHERE_API_KEY", "").strip()
+    if not api_key:
+        raise SystemExit("COHERE_API_KEY is required for RAGAS evaluation.")
 
-    judge_llm = llm_factory(model, client=client)
+    judge_model = os.getenv(
+        "RAGAS_JUDGE_MODEL",
+        "command-a-plus-05-2026",
+    )
+    embed_model = os.getenv("RAGAS_EMBED_MODEL", "embed-v4.0")
+
+    judge_client = Cohere(api_key=api_key)
+    judge_llm = llm_factory(
+        judge_model,
+        provider="cohere",
+        client=judge_client,
+    )
     judge_embeddings = embedding_factory(
-        "openai",
-        model=os.getenv("RAGAS_EMBED_MODEL", "text-embedding-3-small"),
-        client=client,
+        "litellm",
+        model=f"cohere/{embed_model}",
+        api_key=api_key,
     )
 
     faithfulness = Faithfulness(llm=judge_llm)
-    relevancy = AnswerRelevancy(llm=judge_llm, embeddings=judge_embeddings)
+    relevancy = AnswerRelevancy(
+        llm=judge_llm,
+        embeddings=judge_embeddings,
+    )
 
     rag = FootballLawsRAG()
     rows = []
@@ -77,7 +92,17 @@ async def main() -> None:
 
     report = {
         "questions": len(rows),
-        "judge_model": model,
+        "provider": "Cohere",
+        "judge_model": judge_model,
+        "embedding_model": embed_model,
+        "generation_model": os.getenv(
+            "COHERE_CHAT_MODEL",
+            "command-a-plus-05-2026",
+        ),
+        "rerank_model": os.getenv(
+            "COHERE_RERANK_MODEL",
+            "rerank-v4.0-pro",
+        ),
         "metrics": {
             "faithfulness_mean": avg_faith,
             "answer_relevancy_mean": avg_rel,
